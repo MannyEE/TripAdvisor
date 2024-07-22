@@ -17,19 +17,15 @@ let config_distance_address place_id_origin place_id_destination =
   "&origin=place_id:" ^ place_id_origin
 ;;
 
-
-
-
 let geocode address =
 
-  let%map key = Reader.file_contents "/home/ubuntu/api" in
-
+  let%bind key = Reader.file_contents "/home/ubuntu/api" in
   let address = address ^ "&key=" ^ key in
+
   Client.get (Uri.of_string (address)) >>= fun (_resp, body) ->
   let%bind body = Body.to_string  body in
   return body
 ;;
-
 
 
 let get_place_id json_string : string = 
@@ -38,21 +34,13 @@ let get_place_id json_string : string =
   
   let place_id = Jsonaf.member_exn "results" place_id_json 
   |> Jsonaf.list_exn |> List.hd_exn |> Jsonaf.member_exn "place_id" |> Jsonaf.string_exn in
-
-  (* print_endline place_id; *)
   place_id  
 ;;
 
 let get_distance json_string : string = 
 
-  (* print_endline json_string; *)
-  (* json_string *)
   let distance_json = Jsonaf.of_string json_string in
-
   let distance = Jsonaf.member_exn "routes" distance_json |> Jsonaf.list_exn |>  List.hd_exn |> Jsonaf.member_exn "legs" |> Jsonaf.list_exn |> List.hd_exn |>  Jsonaf.member_exn "duration" |> Jsonaf.member_exn "value" in
-
-  (* print_endline (Jsonaf.to_string distance); *)
-
   Jsonaf.to_string distance
     
 ;;
@@ -69,23 +57,6 @@ let destination_api place_id_destination place_id_origin =
   let distance_address = config_distance_address place_id_destination place_id_origin in
   let%map distance_geocode = geocode distance_address in
   get_distance distance_geocode
-
-
-(* let config_destination_link address = 
-  
-  "https://maps.googleapis.com/maps/api/directions/json?origin=Disneyland&destination=Universal+Studios+Hollywood&key="
-;; *)
-
-(* let destination =
-  Client.get (Uri.of_string (config_destination_link)) >>= fun (_resp, body) ->
-  (* let code = resp |> Response.status |> Code.code_of_status in *)
-  (* printf "Response code: %d\n" code;
-  printf "Headers: %s\n" (resp |> Response.headers |> Header.to_string); *)
-  let%bind body =  Body.to_string  body in
-  (* printf "Body of length: %d\n" (String.length body); *)
-  return body
 ;;
- *)
-
 
 
