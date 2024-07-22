@@ -8,7 +8,7 @@ let config_geocode_address address =
   let address_word_list =  String.split_on_chars address ~on:[' '] in
   let correct_address = String.concat ~sep:"%20" address_word_list in
 
-  "https://maps.googleapis.com/maps/api/geocode/json?address=" ^ correct_address ^ "&key=AIzaSyB33z6sKL64t_DQZOcJXpm7epDZqDMlRl0"
+  "https://maps.googleapis.com/maps/api/geocode/json?address=" ^ correct_address ^ "&key="
 ;;
 
 let config_distance_address place_id_origin place_id_destination = 
@@ -17,7 +17,7 @@ let config_distance_address place_id_origin place_id_destination =
   "https://maps.googleapis.com/maps/api/directions/json?destination=place_id:" ^ place_id_destination ^
   "&mode=" ^ transit_mode ^ 
   "&origin=place_id:" ^ place_id_origin ^
-  "&key=AIzaSyB33z6sKL64t_DQZOcJXpm7epDZqDMlRl0"
+  "&key="
 ;;
 
 
@@ -72,7 +72,7 @@ let destination_api place_id_destination place_id_origin =
 
 (* let config_destination_link address = 
   
-  "https://maps.googleapis.com/maps/api/directions/json?origin=Disneyland&destination=Universal+Studios+Hollywood&key=AIzaSyB33z6sKL64t_DQZOcJXpm7epDZqDMlRl0"
+  "https://maps.googleapis.com/maps/api/directions/json?origin=Disneyland&destination=Universal+Studios+Hollywood&key="
 ;; *)
 
 (* let destination =

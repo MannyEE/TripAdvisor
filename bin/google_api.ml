@@ -4,6 +4,8 @@ open! Cohttp
 open Cohttp_async
 
 
+let key = Reader.file_contents "/home/ubuntu/api";;
+
 let config_geocode_address address = 
   let address_word_list =  String.split_on_chars address ~on:[' '] in
   let correct_address = String.concat ~sep:"%20" address_word_list in
