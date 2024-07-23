@@ -27,3 +27,8 @@ let get_coordinates address =
 let find_distance origin destination = 
 
 ;; *)
+
+type edge = {
+  weight : int
+  ; destination : string
+}
