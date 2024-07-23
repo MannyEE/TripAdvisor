@@ -12,18 +12,17 @@ let rec get_desired_places ((): unit) =
 ;;
 
 let make_destination_graph places_list transport_mode = 
-  let map = Hashtbl.create (module String) in
-  let%bind _ = Deferred.List.iter ~how:`Parallel places_list ~f:(fun origin -> 
-    let empty_tbl = Hashtbl.create (module String) in
-    Hashtbl.add_exn map ~key:origin ~data:empty_tbl;
+  let map = String.Table.create () in
+  let%bind () = Deferred.List.iter ~how:`Parallel places_list ~f:(fun origin -> 
+    let empty_tbl = Hashtbl.find_or_add map origin ~default:String.Table.create in
 
     Deferred.List.iter ~how:`Parallel places_list ~f:(fun destination ->
       match String.equal origin destination with 
       | true -> return ()
       | false -> 
-        let%bind distance_in_seconds = Google_api.destination_api origin destination transport_mode in
-        let distance = (distance_in_seconds) / 60 in
-        Hashtbl.add_exn (Hashtbl.find_exn map origin) ~key:destination ~data:distance;
+        let%bind distance = Google_api.destination_api origin destination transport_mode in
+        (* let distance = (distance_in_seconds) / 60 in *)
+        Hashtbl.add_exn (empty_tbl) ~key:destination ~data:distance;
         return()
     ) 
   ) in
@@ -40,12 +39,12 @@ let run () =
   let%bind graph = make_destination_graph (List.dedup_and_sort all_places ~compare:String.compare) travel_method in
 
   (* print_s [%sexp (graph : ( string, (string, string) Hashtbl_intf.Hashtbl.t ) Hashtbl_intf.Hashtbl.t)]; *)
-  print_s [%sexp (graph : int String.Table.t String.Table.t )];
+  (* print_s [%sexp (graph : Time_ns.Span.t String.Table.t String.Table.t )]; *)
 
   (* let (best_path, best_time) = Tsp.get_shortest_path ~origin:origin_address ~dest_list:places_list ~path_map:graph in *)
   let best = Tsp.get_shortest_path ~origin:origin_address ~dest_list:places_list ~path_map:graph in
 
-  print_s [%message (best : (string list * int))];
+  print_s [%message (best : (string list * Time_ns.Span.t))];
   (* let%bind address1 = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter origin" in
 
   let%bind address2 = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter destination" in
@@ -71,9 +70,8 @@ let command_play =
       in
      fun () -> 
 
-      let%bind _f = run () in
+      run ()
 
-      return ()
       )
 ;;
 
