@@ -73,7 +73,7 @@ let destination_api destination origin transit_mode =
   let%bind place_id_destination = place_id_api destination in
   let distance_address = config_distance_address place_id_destination place_id_origin transit_mode in
   let%map distance_geocode = geocode distance_address in
-  get_distance distance_geocode
+  Int.of_string (get_distance distance_geocode)
 ;;
 
 
