@@ -12,7 +12,7 @@ let rec small_input_search ~cur_path ~cur_time ~dest_set ~(path_map : Time_ns.Sp
 ;;
 
 let get_shortest_path ~origin ~(dest_list : Location.t list) ~(path_map : Time_ns.Span.t Location.Table.t Location.Table.t) : (Location.t list * Time_ns.Span.t) =
-  if List.length dest_list <= 6 then
+  if List.length dest_list <= 10 then
   (let dest_set = Location.Set.of_list dest_list in
   small_input_search ~cur_path:[origin] ~cur_time:Time_ns.Span.zero ~dest_set ~path_map)
   else 

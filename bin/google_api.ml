@@ -21,7 +21,7 @@ let config_distance_address ?(waypoints = "") place_id_origin place_id_destinati
 ;;
 
 let api = Lazy_deferred.create (fun () -> Reader.file_contents "/home/ubuntu/api" )
-let geocode ~configured_address =
+let call_api ~configured_address =
   
   let%bind key = Lazy_deferred.force_exn api in
 
@@ -84,7 +84,7 @@ let get_distance json_string : string =
 
 let get_location (name : string) : Location.t Deferred.t = 
   let config_name = config_geocode_address ~street_address:name in
-  let%map geocode = geocode ~configured_address:config_name in 
+  let%map geocode = call_api ~configured_address:config_name in 
   let place_id = get_place_id geocode in 
   let formatted_address = get_formatted_address geocode in 
   {
@@ -94,13 +94,13 @@ let get_location (name : string) : Location.t Deferred.t =
 
 let place_id_api address = 
   let origin_address = config_geocode_address ~street_address:(address) in
-  let%map place_id_origin_geocode = geocode ~configured_address:origin_address in
+  let%map place_id_origin_geocode = call_api ~configured_address:origin_address in
   get_place_id place_id_origin_geocode
 ;;
 
 let destination_api ~(destination : Location.t) ~(origin : Location.t) transit_mode = 
   let distance_address = config_distance_address destination.place_id origin.place_id transit_mode in
-  let%map distance_geocode = geocode ~configured_address:distance_address in
+  let%map distance_geocode = call_api ~configured_address:distance_address in
   Time_ns.Span.of_int_sec (Int.of_string (get_distance distance_geocode))
 ;;
 

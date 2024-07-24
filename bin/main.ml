@@ -35,6 +35,16 @@ let run () =
 
   print_endline "What places would you like to visit? Put in one address at a time";
   let%bind string_places_list = get_desired_places () in
+  (* FOR TESTING *)
+  (* let string_places_list = 
+  ["University of Nevada Reno" ; 
+  "University of California Los Angeles" ;
+  "University of Nevada Las Vegas";
+  "Stanford University" ;
+  "Universal Studios Hollywood" ; "Phoenix, Arizona" ;
+  "Disneyland California" ; "Springfield, Illinois" ;
+  "Miami, Florida" ;
+  "Mexico City, Mexico" ] in *)
   let%bind location_places_list = Deferred.List.map string_places_list ~how:`Sequential ~f:(fun place ->
     Google_api.get_location place
   ) in
@@ -77,9 +87,7 @@ let command_play =
         host_and_port of controller"*)
       in
      fun () -> 
-
       run ()
-
       )
 ;;
 
