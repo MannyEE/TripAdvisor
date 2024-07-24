@@ -1,6 +1,6 @@
 open! Core 
 
-let rec small_input_search ~cur_path ~cur_time ~dest_set ~(path_map : Time_ns.Span.t String.Table.t String.Table.t) = 
+let rec small_input_search ~cur_path ~cur_time ~dest_set ~(path_map : Time_ns.Span.t Location.Table.t Location.Table.t) = 
   if Set.is_empty dest_set then (cur_path, cur_time) else 
     Set.fold ~init:(cur_path, Time_ns.Span.max_value_representable) dest_set ~f:(fun (best_path, shortest_time) dest -> 
       let origin = List.last_exn cur_path in
@@ -11,9 +11,9 @@ let rec small_input_search ~cur_path ~cur_time ~dest_set ~(path_map : Time_ns.Sp
     )
 ;;
 
-let get_shortest_path ~origin ~dest_list ~(path_map : Time_ns.Span.t String.Table.t String.Table.t) : (string list * Time_ns.Span.t) =
+let get_shortest_path ~origin ~(dest_list : Location.t list) ~(path_map : Time_ns.Span.t Location.Table.t Location.Table.t) : (Location.t list * Time_ns.Span.t) =
   if List.length dest_list <= 6 then
-  (let dest_set = String.Set.of_list dest_list in
+  (let dest_set = Location.Set.of_list dest_list in
   small_input_search ~cur_path:[origin] ~cur_time:Time_ns.Span.zero ~dest_set ~path_map)
   else 
   ( print_endline "Too many locations I'm not doing allat";

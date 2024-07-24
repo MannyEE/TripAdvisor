@@ -2,7 +2,7 @@ open! Core
 open Async
 
 let rec get_desired_places ((): unit) = 
-  let%bind input = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter destination" in
+  let%bind input = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter destination (or ENTER to stop)" in
   match String.equal input "" with 
     | true -> 
       return [];
@@ -11,16 +11,16 @@ let rec get_desired_places ((): unit) =
       input :: places_list
 ;;
 
-let make_destination_graph places_list transport_mode = 
-  let map = String.Table.create () in
+let make_destination_graph (places_list : Location.t list) transport_mode = 
+  let map = Location.Table.create () in
   let%bind () = Deferred.List.iter ~how:`Parallel places_list ~f:(fun origin -> 
-    let empty_tbl = Hashtbl.find_or_add map origin ~default:String.Table.create in
+    let empty_tbl = Hashtbl.find_or_add map origin ~default:Location.Table.create in
 
     Deferred.List.iter ~how:`Parallel places_list ~f:(fun destination ->
-      match String.equal origin destination with 
+      match [%compare.equal:Location.t] origin destination with 
       | true -> return ()
       | false -> 
-        let%bind distance = Google_api.destination_api origin destination transport_mode in
+        let%bind distance = Google_api.destination_api ~origin ~destination transport_mode in
         (* let distance = (distance_in_seconds) / 60 in *)
         Hashtbl.add_exn (empty_tbl) ~key:destination ~data:distance;
         return()
@@ -30,21 +30,29 @@ let make_destination_graph places_list transport_mode =
 ;;
 
 let run () = 
-  let%bind origin_address = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter origin location" in
-  print_endline "What places would you like to visit? Put in one address at a time";
-  let%bind places_list = get_desired_places () in
-  let all_places = origin_address :: places_list in
+  let%bind string_origin_address = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter origin location" in
+  let%bind location_origin_address = Google_api.get_location string_origin_address in
 
+  print_endline "What places would you like to visit? Put in one address at a time";
+  let%bind string_places_list = get_desired_places () in
+  let%bind location_places_list = Deferred.List.map string_places_list ~how:`Sequential ~f:(fun place ->
+    Google_api.get_location place
+  ) in
+  let all_places = [location_origin_address] @ location_places_list in
+    
   let%bind travel_method = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter travel method" in
-  let%bind graph = make_destination_graph (List.dedup_and_sort all_places ~compare:String.compare) travel_method in
+  let%bind graph = make_destination_graph (List.dedup_and_sort all_places ~compare:Location.compare) travel_method in
+  (* print_s [%message (graph : (Time_ns.Span.t Location.Table.t Location.Table.t))]; *)
+
+
 
   (* print_s [%sexp (graph : ( string, (string, string) Hashtbl_intf.Hashtbl.t ) Hashtbl_intf.Hashtbl.t)]; *)
   (* print_s [%sexp (graph : Time_ns.Span.t String.Table.t String.Table.t )]; *)
 
   (* let (best_path, best_time) = Tsp.get_shortest_path ~origin:origin_address ~dest_list:places_list ~path_map:graph in *)
-  let best = Tsp.get_shortest_path ~origin:origin_address ~dest_list:places_list ~path_map:graph in
-
-  print_s [%message (best : (string list * Time_ns.Span.t))];
+  let best = Tsp.get_shortest_path ~origin:location_origin_address ~dest_list:location_places_list ~path_map:graph in
+  print_s [%message (best : (Location.t list * Time_ns.Span.t))];
+  Google_api.print_maps_address (Tuple2.get1 best);
   (* let%bind address1 = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter origin" in
 
   let%bind address2 = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter destination" in
