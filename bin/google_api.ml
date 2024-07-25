@@ -52,28 +52,10 @@ let get_place_id json_string : string =
 let get_formatted_address json_string : string = 
 
   try 
-
-  let place_id_json = Jsonaf.of_string json_string in
-  
-  let place_id = Jsonaf.member_exn "results" place_id_json 
-  |> Jsonaf.list_exn |> List.hd_exn |> Jsonaf.member_exn "place_id" |> Jsonaf.string_exn in
-  place_id  
-
-  with 
-  | exn -> 
-    print_endline json_string;
-    raise exn
-;;
-let get_formatted_address json_string : string = 
-
-  try 
-
-  let place_id_json = Jsonaf.of_string json_string in
-  
-  let place_id = Jsonaf.member_exn "results" place_id_json 
-  |> Jsonaf.list_exn |> List.hd_exn |> Jsonaf.member_exn "formatted_address" |> Jsonaf.string_exn in
-  place_id  
-
+    let place_id_json = Jsonaf.of_string json_string in
+    let place_id = Jsonaf.member_exn "results" place_id_json 
+    |> Jsonaf.list_exn |> List.hd_exn |> Jsonaf.member_exn "place_id" |> Jsonaf.string_exn in
+    place_id  
   with 
   | exn -> 
     print_endline json_string;
