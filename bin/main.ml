@@ -34,9 +34,9 @@ let run () =
   let%bind location_origin_address = Google_api.get_location string_origin_address in
 
   print_endline "What places would you like to visit? Put in one address at a time";
-  let%bind string_places_list = get_desired_places () in
+  let%bind _string_places_list = get_desired_places () in
   (* FOR TESTING *)
-  (* let string_places_list = 
+  let string_places_list = 
   ["University of Nevada Reno" ; 
   "University of California Los Angeles" ;
   "University of Nevada Las Vegas";
@@ -44,7 +44,7 @@ let run () =
   "Universal Studios Hollywood" ; "Phoenix, Arizona" ;
   "Disneyland California" ; "Springfield, Illinois" ;
   "Miami, Florida" ;
-  "Mexico City, Mexico" ] in *)
+  "Mexico City, Mexico" ] in
   let%bind location_places_list = Deferred.List.map string_places_list ~how:`Sequential ~f:(fun place ->
     Google_api.get_location place
   ) in
@@ -63,16 +63,6 @@ let run () =
   let best = Tsp.get_shortest_path ~origin:location_origin_address ~dest_list:location_places_list ~path_map:graph in
   print_s [%message (best : (Location.t list * Time_ns.Span.t))];
   Google_api.print_maps_address (Tuple2.get1 best);
-  (* let%bind address1 = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter origin" in
-
-  let%bind address2 = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter destination" in
-
-  let%bind place_id_origin = Google_api.place_id_api address1 in
-  let%bind place_id_destination = Google_api.place_id_api address2 in
-  
-  let%bind distance_in_seconds = Google_api.destination_api place_id_origin place_id_destination travel_method in
-
-  let distance = (Int.of_string distance_in_seconds) / 60 in *)
   
   (* let () = print_endline ((Int.to_string distance) ^ " minutes " ^ travel_method) in *)
   return ();
