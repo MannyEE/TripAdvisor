@@ -1,34 +1,13 @@
-(* open! Core
+open! Core
+module T = struct 
+type t = 
+{
+  place_id : string ;
+  name : string ;
+  formatted_address : string ;
+} [@@deriving compare, hash, sexp_of]
 
-type t = {
-  address : string
-  ; lat : float
-  ; long : float
-}
-
-let create (address : string) =
-
-
-
-;;
-
-type route = {
-  origin : t
-  ; destination : t
-  ; distance : float
-}
-
-
-let get_coordinates address = 
-
-
-;;
-
-let find_distance origin destination = 
-
-;; *)
-
-type edge = {
-  weight : int
-  ; destination : string
-}
+end
+include T
+include Hashable.Make_plain(T)
+include Comparable.Make_plain(T)
