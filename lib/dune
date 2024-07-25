@@ -1,6 +1,6 @@
 (library
  (inline_tests)
- (name demo1)
- (libraries core)
+ (name trip_advisor_lib)
+ (libraries core async_interactive jsonaf fzf cohttp async cohttp-async core_unix.command_unix file_path lambdasoup)
  (preprocess
-  (pps ppx_inline_test)))
+  (pps ppx_jane ppx_inline_test)))

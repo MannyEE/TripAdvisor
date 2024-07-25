@@ -1,5 +1,4 @@
 (executable
  (public_name demo1)
  (name main)
- (preprocess (pps ppx_jane))
- (libraries async_interactive jsonaf demo1 core fzf cohttp async cohttp-async core_unix.command_unix))
+ (libraries trip_advisor_lib core))
