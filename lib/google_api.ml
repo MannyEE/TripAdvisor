@@ -74,16 +74,25 @@ let get_distance json_string : string =
     
 ;;
 
+let get_coordinates geocode : Location.Coordinates.t = 
+  let geocode_json = Jsonaf.of_string geocode in
+  let lat_and_long = 
+  Jsonaf.member_exn "results" geocode_json |> Jsonaf.list_exn |> List.hd_exn |> Jsonaf.member_exn "geometry"|> Jsonaf.member_exn "location" in
+  let lat = Jsonaf.member_exn "lat" lat_and_long |> Jsonaf.float_exn in
+  let long = Jsonaf.member_exn "lng" lat_and_long |> Jsonaf.float_exn in
+  Location.Coordinates.{lat ; long}
+;;
+
 let get_location (name : string) : Location.t Deferred.t = 
   let config_name = config_geocode_address ~street_address:name in
   let%map geocode = call_api ~configured_address:config_name in 
   let place_id = get_place_id geocode in 
   let formatted_address = get_formatted_address geocode in 
+  let coordinates = get_coordinates geocode in
   {
-    Location.place_id = place_id ; name = name ; formatted_address = formatted_address
+    Location.place_id = place_id ; name = name ; formatted_address = formatted_address ; coordinates = coordinates
   }
 ;;
-
 let place_id_api address = 
   let origin_address = config_geocode_address ~street_address:(address) in
   let%map place_id_origin_geocode = call_api ~configured_address:origin_address in
