@@ -71,14 +71,15 @@ let get_distance geocode_json : string =
     
 ;;
 
-let get_coordinates geocode : Location.Coordinates.t = 
-  let geocode_json = Jsonaf.of_string geocode in
+let get_coordinates (geocode : Jsonaf_kernel.t): Location.Coordinates.t = 
+  (* let geocode_json = Jsonaf.of_string geocode in *)
   let lat_and_long = 
-  Jsonaf.member_exn "results" geocode_json |> Jsonaf.list_exn |> List.hd_exn |> Jsonaf.member_exn "geometry"|> Jsonaf.member_exn "location" in
+  Jsonaf.member_exn "results" geocode |> Jsonaf.list_exn |> List.hd_exn |> Jsonaf.member_exn "geometry"|> Jsonaf.member_exn "location" in
   let lat = Jsonaf.member_exn "lat" lat_and_long |> Jsonaf.float_exn in
   let long = Jsonaf.member_exn "lng" lat_and_long |> Jsonaf.float_exn in
   Location.Coordinates.{lat ; long}
 ;;
+
 
 let get_location (name : string) : Location.t Deferred.t = 
   let config_name = config_geocode_address ~street_address:name in
