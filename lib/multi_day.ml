@@ -62,8 +62,8 @@ let rec k_means_rec ~k ~(points : Location.t list) ~(old_centroids : Location.Co
 
 let k_means_clustering ~k ~points =
   let old_centroids = get_n_random_elems ~k ~points in
-  k_means_rec ~k ~points ~old_centroids
-
+  let cluster_deque_list = k_means_rec ~k ~points ~old_centroids in
+  List.map cluster_deque_list ~f:(fun deque -> Deque.to_list deque)
 ;;
 
 (* 
@@ -79,8 +79,32 @@ let plan_multi_trip =
 
 ;; *)
 
+let create_empty_coordinate_location ~(lat : float) ~(long : float) = 
+  Location.{
+    place_id = "" ;
+    name = "" ;
+    formatted_address = "" ;
+    coordinates =  Coordinates.{lat ; long}
+  }
+;;
+
 
 let%expect_test "testing k means cluster" = 
-let loc_list = Location.{}
-k_means_clustering 
+  let (loc_list : Location.t list) = [
+    (create_empty_coordinate_location ~lat:(-2.0) ~long:(-1.0)) ;
+    (create_empty_coordinate_location ~lat:1.0 ~long:1.0) ;
+    (create_empty_coordinate_location ~lat:2.0 ~long:1.0) ;
+    (create_empty_coordinate_location ~lat:(-1.0) ~long:(-1.0)) ;
+    (create_empty_coordinate_location ~lat:(-1.0) ~long:(-2.0));
+    (create_empty_coordinate_location ~lat:1.0 ~long:2.0) ;
+  ] in
+  let clusters = k_means_clustering ~points:loc_list ~k:2 in
+  let (clusters_coords : Location.Coordinates.t list list) = 
+    List.map clusters ~f:(fun cluster ->
+        List.map cluster ~f:(fun location -> location.coordinates)
+    )
+  in
+  print_s [%message (clusters_coords : Location.Coordinates.t list list)];
+  return [%expect {| |}]
+;;
   
