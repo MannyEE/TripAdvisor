@@ -1,6 +1,6 @@
 open! Core 
 
-let rec small_input_search ~cur_path ~cur_time ~dest_set ~(path_map : Time_ns.Span.t Location.Table.t Location.Table.t) = 
+let rec small_input_search ~cur_path ~cur_time ~(dest_set : Location.Set.t) ~(path_map : Time_ns.Span.t Location.Table.t Location.Table.t) = 
   if Set.is_empty dest_set then (cur_path, cur_time) else 
     Set.fold ~init:(cur_path, Time_ns.Span.max_value_representable) dest_set ~f:(fun (best_path, shortest_time) dest -> 
       let origin = List.last_exn cur_path in

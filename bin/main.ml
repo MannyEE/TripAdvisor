@@ -1,1 +1,1 @@
-let () = Command_unix.run Trip_advisor_lib.Trip_advisor.command_play;;
+let () = Command_unix.run Trip_advisor_lib.Trip_advisor.command;;
