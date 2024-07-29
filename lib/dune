@@ -1,6 +1,6 @@
 (library
  (inline_tests)
  (name trip_advisor_lib)
- (libraries core async_interactive jsonaf fzf cohttp async cohttp-async core_unix.command_unix file_path lambdasoup)
+ (libraries core async_interactive jsonaf fzf cohttp async cohttp-async core_unix.command_unix file_path lambdasoup curl)
  (preprocess
   (pps ppx_jane ppx_inline_test)))

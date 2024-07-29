@@ -29,21 +29,15 @@ let make_destination_graph (places_list : Location.t list) transport_mode =
 ;;
 
 let run () = 
+  (* let%bind plane = Plane.call_api () in
+  Plane.parse_kayak plane; *)
+  
   let%bind string_origin_address = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter origin location" in
   let%bind location_origin_address = Google_api.get_location string_origin_address in
 
   print_endline "What places would you like to visit? Put in one address at a time";
   let%bind string_places_list = get_desired_places () in
-  (* FOR TESTING *)
-  (* let string_places_list = 
-  ["University of Nevada Reno" ; 
-  "University of California Los Angeles" ;
-  "University of Nevada Las Vegas";
-  "Stanford University" ;
-  "Universal Studios Hollywood" ; "Phoenix, Arizona" ;
-  "Disneyland California" ; "Springfield, Illinois" ;
-  "Miami, Florida" ;
-  "Mexico City, Mexico" ] in *)
+  
   let%bind location_places_list = Deferred.List.map string_places_list ~how:`Sequential ~f:(fun place ->
     Google_api.get_location place
   ) in
@@ -65,9 +59,10 @@ let run () =
 let command_play =
   Command.async
     ~summary:"Play"
-    (let%map_open.Command () = return ()
+    (let%map_open.Command () = 
      (* and _controller = flag "-controller" (required host_and_port) ~doc:"_
         host_and_port of controller"*)
+        return ()
       in
      fun () -> 
       run ()
