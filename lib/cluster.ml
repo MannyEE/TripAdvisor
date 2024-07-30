@@ -3,7 +3,7 @@ open Async
 
 
 (* Old function: gets random elems *)
-let rec get_n_random_elems ~k ~(points : Location.t list) : Location.Coordinates.t list = 
+(* let rec k_means_initialize ~k ~(points : Location.t list) : Location.Coordinates.t list = 
   if k = 0 then [] 
   else 
     let random_elem = List.random_element_exn ~random_state:Random.State.default points in
@@ -12,8 +12,8 @@ let rec get_n_random_elems ~k ~(points : Location.t list) : Location.Coordinates
       | 0 -> false 
       | _ -> true 
     ) ) in
-  List.append [random_elem.coordinates] (get_n_random_elems ~k:(k - 1) ~points:new_points)
-;;
+  List.append [random_elem.coordinates] (k_means_initialize ~k:(k - 1) ~points:new_points)
+;; *)
 
 let distance_between (point1 : Location.Coordinates.t) (point2 : Location.Coordinates.t) = 
   let long1 = point1.long in 
@@ -56,44 +56,46 @@ let rec k_means_impl ~k ~(points : Location.t list) ~(old_centroids : Location.C
   else 
     k_means_impl ~k ~points ~old_centroids:new_centroids
 ;;
-(* 
+
 let get_closest_centroid_distance ~(location : Location.t) ~(centroid_list : Location.Coordinates.t list) =
-  List.fold centroid_list ~init:(Float.max_value) ~f:(fun )
-;; *)
-(* 
-let rec k_means_initialize_rec ~k ~(points : Location.t list) ~(centroid_list : Location.Coordinates.t list) : Location.Coordinates.t list = 
-  if k = 0 then centroid_list 
-  else 
+  List.fold centroid_list ~init:(Float.max_value) ~f:(fun cur_min_dist centroid ->
+    let check_dist = distance_between location.coordinates centroid in 
+    if (Float.(<) check_dist cur_min_dist) then check_dist 
+    else cur_min_dist
+  )
+;; 
 
+let filter_out_point ~(points : Location.t list) ~point = 
+  List.filter points ~f:(fun check_point -> 
+    match Location.compare point check_point with 
+    | 0 -> false 
+    | _ -> true 
+  ) 
 
-    let new_centroid : Location.t = 
-      List.fold points ~init:(List.hd_exn points) ~f:(fun (x) location -> 
-          location
-        )
-    in
-    let new_points = (List.filter points ~f:(fun point -> 
-      match Location.compare point new_centroid with 
-      | 0 -> false 
-      | _ -> true 
-    ) ) in
-  k_means_initialize_rec ~k:(k - 1) ~points:new_points ~centroid_list:(centroid_list @ (new_centroid.))
 ;;
 
-let k_means_initialize ~k ~(points : Location.t list) : Location.Coordinates.t list = 
-    let random_elem = List.random_element_exn ~random_state:Random.State.default points in
-    let new_points = (List.filter points ~f:(fun point -> 
-      match Location.compare point random_elem with 
-      | 0 -> false 
-      | _ -> true 
-    ) ) in
-    k_means_initialize_rec ~k:(k - 1) ~points:new_points ~centroid_list:[random_elem.coordinates]
-;; *)
+let rec k_means_initialize ~k ~(points : Location.t list) ~(centroid_list : Location.Coordinates.t list) : Location.Coordinates.t list = 
+  if k = 0 then centroid_list 
+  else 
+    let new_centroid = 
+      (* Finds the point whose closest centroid is farthest away *)
+      List.fold points ~init:(List.hd_exn points, Float.max_value) ~f:(fun (farthest_centroid, farthest_dist) location -> 
+        let check_dist = get_closest_centroid_distance ~location ~centroid_list in
+        if (Float.(>) check_dist farthest_dist) then (location, check_dist) 
+        else (farthest_centroid, farthest_dist)
+      ) |> fst
+    in
 
+    let new_points = filter_out_point ~points ~point:new_centroid in
+  k_means_initialize ~k:(k - 1) ~points:new_points ~centroid_list:(centroid_list @ [(new_centroid.coordinates)])
+;;
 
 let k_means_clustering ~k ~points =
-  let old_centroids = get_n_random_elems ~k ~points in
+  let initial_centroid = List.random_element_exn ~random_state:Random.State.default points in
+  let new_initialize_list = filter_out_point ~points ~point:initial_centroid in
+  let initial_centroids = k_means_initialize ~k:(k - 1) ~points:(new_initialize_list) ~centroid_list:[initial_centroid.coordinates] in
   (* print_s [%message (old_centroids : Location.Coordinates.t list)]; *)
-  let cluster_deque_list = k_means_impl ~k ~points ~old_centroids in
+  let cluster_deque_list = k_means_impl ~k ~points ~old_centroids:initial_centroids in
   List.map cluster_deque_list ~f:(fun deque -> Deque.to_list deque)
 ;;
 
