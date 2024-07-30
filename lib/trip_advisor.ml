@@ -31,7 +31,7 @@ let make_destination_graph (places_list : Location.t list) transport_mode =
 let print_optimal_route ~(origin : Location.t) ~(location_list : Location.t list) ~(day : int) ~distance_data=
   (* print_s [%sexp (graph : Time_ns.Span.t String.Table.t String.Table.t )]; *)
   (* let (best_path, best_time) = Tsp.get_shortest_path ~origin:origin_address ~dest_list:places_list ~path_map:graph in *)
-  let best = Tsp.get_shortest_path ~origin ~dest_list:location_list ~path_map:distance_data in
+  let best = Tsp.Time_span.get_shortest_path ~origin ~dest_list:location_list ~path_map:distance_data in
   (* print_s [%message (best : (Location.t list * Time_ns.Span.t))]; *)
   print_string ("Day " ^ (Int.to_string day) ^ ": ");
   Google_api.print_maps_address (Tuple2.get1 best);
@@ -76,6 +76,7 @@ let run () =
     let clusters = Cluster.k_means_clustering ~k:num_days ~points:location_places_list in 
     let%bind () = Deferred.List.iteri ~how:`Sequential clusters ~f:(fun idx cluster ->
       print_optimal_route ~origin:location_origin_address ~location_list:cluster ~day:(idx + 1) ~distance_data
+    ) in
     ) in
     return ()
 ;;
