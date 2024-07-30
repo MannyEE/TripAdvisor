@@ -1,4 +1,4 @@
-module W = Webdriver_cohttp_async
+(* module W = Webdriver_cohttp_async
 open! Async
 
 let run () =
@@ -40,4 +40,4 @@ let command =
         Printexc.print_backtrace stderr;
         return () *)
       )
-;;
+;; *)
