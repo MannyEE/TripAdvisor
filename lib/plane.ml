@@ -47,14 +47,17 @@ let call_api () =
 let parse_kayak js_file = 
 
   let open Soup in
-  (* let x = parse js_file
+  let script = List.hd_exn (parse js_file
   $$ "script[id=__R9_HYDRATE_DATA__][type=application/json]"
   |> to_list
-  |> List.map ~f:(fun li -> texts li |> String.concat ~sep:"" |> String.strip) in *)
+  |> List.map ~f:(fun li -> texts li |> String.concat ~sep:"" |> String.strip)) in
 
-  let script = parse js_file $ "script[id=__R9_HYDRATE_DATA__][type=application/json]" |> R.leaf_text in
+  let script_json = Jsonaf.of_string script in
 
-  print_s [%message (script : string)]
+  print_s [%sexp (script_json : Jsonaf.t)];
+
+  (* parse js_file $$ "script[id=__R9_HYDRATE_DATA__][type=application/json]" |> R.leaf_text *)
+
 ;;
 
 
