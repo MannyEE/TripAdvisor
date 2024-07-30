@@ -41,10 +41,16 @@ let print_optimal_route ~(origin : Location.t) ~(location_list : Location.t list
 
 
 let run () = 
-  (* let%bind plane = Plane.call_api () in
-  Plane.parse_kayak plane; *)
-  
-  let%bind string_origin_address = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter origin location" in
+
+  let%bind file =  Reader.file_contents "kayak" in
+  let _script_content = Plane.parse_kayak file in
+  (* print_endline script_content; *)
+  (* let%bind plane = Plane.call_api () in *)
+
+  (* let plane = 
+  print_endline plane;
+   *)
+  (* let%bind string_origin_address = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter origin location" in
   let%bind location_origin_address = Google_api.get_location string_origin_address in
 
   print_endline "What places would you like to visit? Put in one address at a time";
@@ -70,17 +76,13 @@ let run () =
     let clusters = Cluster.k_means_clustering ~k:num_days ~points:location_places_list in 
     let%bind () = Deferred.List.iteri ~how:`Sequential clusters ~f:(fun idx cluster ->
       print_optimal_route ~origin:location_origin_address ~location_list:cluster ~day:(idx + 1) ~distance_data
-    ) in
+    ) in *)
     return ()
 ;;
 
 let command =
   Command.async
     ~summary:"Calculates Trip Route"
-    (let%map_open.Command () = 
-        return ()
-      in
-     fun () -> 
-      run ()
-      )
+    (let%map_open.Command () = return () in
+    fun () -> run ())
 ;;
