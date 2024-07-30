@@ -9,3 +9,16 @@ Springfield, Illinois
 Miami, Florida
 Mexico City, Mexico
 
+
+Cluster test:
+
+70 Pine Street, 70 Pine St, New York, NY 10005
+Jane Street, 250 Vesey St, New York, NY 10281
+Chipotle Mexican Grill, 111 Fulton St, New York, NY 10038
+Staten Island Ferry, 4 Whitehall St, New York, NY 10004
+MUSEUM OF ICE CREAM, 558 Broadway, New York, NY 10012
+Nike Soho, 529 Broadway, New York, NY 10012
+NYU Stern School of Business, 44 West 4th Street, New York, NY 10012
+Central Park
+The Museum of Modern Art, 11 W 53rd St, New York, NY 10019
+Museum of Arts and Design, 2 Columbus Cir, New York, NY 10019

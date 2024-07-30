@@ -1,14 +1,28 @@
 open! Core 
 
-let rec small_input_search ~cur_path ~cur_time ~(dest_set : Location.Set.t) ~(path_map : Time_ns.Span.t Location.Table.t Location.Table.t) = 
+module type Weight = sig 
+  type t
+include Comparable.S with type t := t
+val zero : t
+val (+) : t -> t -> t
+
+end
+
+module Make_tsp (Weight : Weight) = struct 
+
+
+let rec small_input_search ~cur_path ~cur_time ~(dest_set : Location.Set.t) ~(path_map : Weight.t Location.Table.t Location.Table.t) = 
   if Set.is_empty dest_set then (cur_path, cur_time) else 
-    Set.fold ~init:(cur_path, Time_ns.Span.max_value_representable) dest_set ~f:(fun (best_path, shortest_time) dest -> 
+    Set.fold ~init:(cur_path, None) dest_set ~f:(fun (best_path, shortest_time) dest -> 
       let origin = List.last_exn cur_path in
       let edge_map = Hashtbl.find_exn path_map origin in
         let travel_time = Hashtbl.find_exn edge_map dest in
-        let (check_path, check_time) = small_input_search ~cur_path:(cur_path @ [dest]) ~cur_time:(Time_ns.Span.(+) cur_time travel_time) ~dest_set:(Set.remove dest_set dest) ~path_map in
-        if Time_ns.Span.(<) check_time shortest_time then (check_path, check_time) else (best_path, shortest_time)
-    )
+        let (check_path, check_time) = small_input_search ~cur_path:(cur_path @ [dest]) ~cur_time:(Weight.(+) cur_time travel_time) ~dest_set:(Set.remove dest_set dest) ~path_map in
+        match shortest_time with 
+        | None -> (check_path, Some check_time)
+        | Some shortest_time ->
+       ( if Weight.(<) check_time shortest_time then (check_path, Some check_time) else (best_path, Some shortest_time))
+    ) |> Tuple2.map_snd ~f:(fun time -> Option.value_exn time)
 ;;
 
 let rec _atps_optimized_tsp ~cur_path ~cur_time ~dest_set ~(path_map : Time_ns.Span.t Location.Table.t Location.Table.t) = 
@@ -21,7 +35,6 @@ let rec _atps_optimized_tsp ~cur_path ~cur_time ~dest_set ~(path_map : Time_ns.S
         if Time_ns.Span.(<) check_time shortest_time then (check_path, check_time) else (best_path, shortest_time)
     )
 ;;
-
 
 let rec stsp_optimized_tsp ~cur_path ~cur_time ~(dest_set : Location.Set.t) ~(path_map : Time_ns.Span.t Location.Table.t Location.Table.t) = 
   match Set.is_empty dest_set with 
@@ -52,3 +65,5 @@ let get_shortest_path ~origin ~(dest_list : Location.t list) ~(path_map : Time_n
     ([], Time_ns.Span.zero)
   ) *)
 ;;
+
+end
