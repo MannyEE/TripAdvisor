@@ -28,6 +28,18 @@ let make_destination_graph (places_list : Location.t list) transport_mode =
   return map
 ;;
 
+let print_optimal_route ~(origin : Location.t) ~(location_list : Location.t list) ~(day : int) ~distance_data=
+  (* print_s [%sexp (graph : Time_ns.Span.t String.Table.t String.Table.t )]; *)
+  (* let (best_path, best_time) = Tsp.get_shortest_path ~origin:origin_address ~dest_list:places_list ~path_map:graph in *)
+  let best = Tsp.get_shortest_path ~origin ~dest_list:location_list ~path_map:distance_data in
+  (* print_s [%message (best : (Location.t list * Time_ns.Span.t))]; *)
+  print_string ("Day " ^ (Int.to_string day) ^ ": ");
+  Google_api.print_maps_address (Tuple2.get1 best);
+  return ()
+ 
+;;
+
+
 let run () = 
   (* let%bind plane = Plane.call_api () in *)
 
@@ -39,28 +51,34 @@ let run () =
 
   print_endline "What places would you like to visit? Put in one address at a time";
   let%bind string_places_list = get_desired_places () in
-  
   let%bind location_places_list = Deferred.List.map string_places_list ~how:`Sequential ~f:(fun place ->
     Google_api.get_location place
   ) in
-  let all_places = [location_origin_address] @ location_places_list in
-    
+
+  let%bind num_days = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "How many days are you traveling?" in
+  let num_days = Int.of_string num_days in
+
   let%bind travel_method = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter travel method" in
-  let%bind graph = make_destination_graph (List.dedup_and_sort all_places ~compare:Location.compare) travel_method in
-  (* print_s [%sexp (graph : Time_ns.Span.t String.Table.t String.Table.t )]; *)
-
-  (* let (best_path, best_time) = Tsp.get_shortest_path ~origin:origin_address ~dest_list:places_list ~path_map:graph in *)
-  let best = Tsp.get_shortest_path ~origin:location_origin_address ~dest_list:location_places_list ~path_map:graph in
-  print_s [%message (best : (Location.t list * Time_ns.Span.t))];
-  Google_api.print_maps_address (Tuple2.get1 best);
-
-  return ()
+  let all_places = [location_origin_address] @ location_places_list in
+  
+  print_endline "Searching Google Maps for travel times...";
+  let%bind distance_data = make_destination_graph (List.dedup_and_sort all_places ~compare:Location.compare) travel_method in
+  
+  print_endline "Computing Optimal Route...";
+  if num_days = 1 then 
+    let%bind () = print_optimal_route ~origin:location_origin_address ~location_list:location_places_list ~day:1 ~distance_data in
+    return ()
+  else 
+    let clusters = Cluster.k_means_clustering ~k:num_days ~points:location_places_list in 
+    let%bind () = Deferred.List.iteri ~how:`Sequential clusters ~f:(fun idx cluster ->
+      print_optimal_route ~origin:location_origin_address ~location_list:cluster ~day:(idx + 1) ~distance_data
+    ) in
+    return ()
 ;;
 
-
-let command_play =
+let command =
   Command.async
-    ~summary:"Play"
+    ~summary:"Calculates Trip Route"
     (let%map_open.Command () = 
     let input_file =
       flag
@@ -74,12 +92,3 @@ let command_play =
       run ()
       )
 ;;
-
-
-(*
-let run = 
-
-      let lat_and_long = 
-        Jsonaf.member_exn "results" coordinates 
-      |> Jsonaf.list_exn |> List.hd_exn |> Jsonaf.member_exn "geometry"|> Jsonaf.member_exn "location" in
-;; *)
