@@ -44,7 +44,7 @@ let rec stsp_optimized_tsp ~cur_path ~cur_time ~(dest_set : Location.Set.t) ~(pa
 
 let get_shortest_path ~origin ~(dest_list : Location.t list) ~(path_map : Time_ns.Span.t Location.Table.t Location.Table.t) : (Location.t list * Time_ns.Span.t) =
   let dest_set = Location.Set.of_list dest_list in
-  if List.length dest_list <= 92 then
+  if List.length dest_list <= 10 then
     small_input_search ~cur_path:[origin] ~cur_time:Time_ns.Span.zero ~dest_set ~path_map
   else 
     stsp_optimized_tsp ~cur_path:[origin] ~cur_time:Time_ns.Span.zero ~dest_set ~path_map;

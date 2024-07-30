@@ -29,9 +29,11 @@ let make_destination_graph (places_list : Location.t list) transport_mode =
 ;;
 
 let run () = 
-  (* let%bind plane = Plane.call_api () in
-  Plane.parse_kayak plane; *)
-  
+  (* let%bind plane = Plane.call_api () in *)
+
+  (* let plane = 
+  print_endline plane;
+   *)
   let%bind string_origin_address = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter origin location" in
   let%bind location_origin_address = Google_api.get_location string_origin_address in
 
@@ -60,11 +62,15 @@ let command_play =
   Command.async
     ~summary:"Play"
     (let%map_open.Command () = 
-     (* and _controller = flag "-controller" (required host_and_port) ~doc:"_
-        host_and_port of controller"*)
+    let input_file =
+      flag
+        "input"
+        (required File_path.arg_type)
+        ~doc:"FILE a file containing a maze"
+    in
         return ()
       in
-     fun () -> 
+        fun () -> 
       run ()
       )
 ;;
