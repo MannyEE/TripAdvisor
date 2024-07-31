@@ -21,7 +21,9 @@ let config_distance_address ?(waypoints = "") place_id_origin place_id_destinati
   "&origin=place_id:" ^ place_id_origin ^ waypoints
 ;;
 
-let api = Lazy_deferred.create (fun () -> Reader.file_contents "/home/ubuntu/api" )
+let api = Lazy_deferred.create (fun () -> Reader.file_contents "/home/ubuntu/api" );;
+
+
 let call_api ~configured_address =
   let%bind key = Lazy_deferred.force_exn api in
 
