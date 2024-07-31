@@ -41,15 +41,22 @@ let print_optimal_route ~(origin : Location.t) ~(location_list : Location.t list
 
 
 let run () = 
-  (* let%bind file = Plane.call_api () in
-  let script_content = Plane.parse_kayak_for_ids file in
+(* 
+  let%bind file =  Reader.file_contents "kayak" in
+  let _script_content = Plane.parse_kayak file in *)
+  (* print_endline script_content; *)
+  (* let%bind plane = Plane.call_api () in *)
 
-  let price = Int.of_string (String.strip script_content ~drop:(fun char -> 
-    Char.equal char '"' || Char.equal char '$')) in
+  (* let plane = 
+  print_endline plane;
+   *)
 
-  print_int price; *)
-
-
+   let%bind _airports_list = Parse_csv.read_csv ~filename:"airports.csv" in 
+  (* let%bind city_codes_list = Parse_csv.read_csv ~filename:"citycodes.csv" in *)
+  (* print_s[%message (airports_list : Parse_csv.Row.t list  )]; *)
+  (* print_s[%message (city_codes_list : Parse_csv.Row.t list  )]; *)
+    return ()
+(*   
   let%bind string_origin_address = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter origin location" in
   let%bind location_origin_address = Google_api.get_location string_origin_address in
 
@@ -76,8 +83,10 @@ let run () =
     let clusters = Cluster.k_means_clustering ~k:num_days ~points:location_places_list in 
     let%bind () = Deferred.List.iteri ~how:`Sequential clusters ~f:(fun idx cluster ->
       print_optimal_route ~origin:location_origin_address ~location_list:cluster ~day:(idx + 1) ~distance_data
-    ) in
-    return ()
+    ) in *)
+
+
+  
 ;;
 
 let command =
