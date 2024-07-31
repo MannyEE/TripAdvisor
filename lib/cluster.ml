@@ -91,6 +91,8 @@ let rec k_means_initialize ~k ~(points : Location.t list) ~(centroid_list : Loca
 ;;
 
 let k_means_clustering ~k ~points =
+  let points_size = List.length points in 
+  let k = min points_size k in
   let initial_centroid = List.random_element_exn ~random_state:Random.State.default points in
   let new_initialize_list = filter_out_point ~points ~point:initial_centroid in
   let initial_centroids = k_means_initialize ~k:(k - 1) ~points:(new_initialize_list) ~centroid_list:[initial_centroid.coordinates] in

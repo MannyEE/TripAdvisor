@@ -4049,7 +4049,7 @@ KIJ,RJSN,Niigata Airport,37.9555294,139.118527,29,,Asia/Tokyo,KIJ,JP,Kameda-honc
 KIK,ORKK,Kirkuk,35.516666,44.283333,1061,,Asia/Baghdad,KIK,IQ,Kirkuk,Muhafazat Kirkuk,,AP
 KIL,,Kilwa,-8.4,28.05,3120,,Africa/Lubumbashi,KIL,CD,Nchelenge,Luapula,,AP
 KIM,FAKM,Kimberley Airport,-28.806550549999997,24.766859619333,3950,,Africa/Johannesburg,KIM,ZA,Kimberley,Northern Cape,Frances Baard District Municipality,AP
-KIN,MKJP,Norman Manley International Airport,17.93556065,-76.78098090118962,10,,America/Jamaica,KIN,JM,,,,AP
+KIN,MKJP,Norman Manley International Airport,17.93556065,-76.78098090118962,10,,America/Jamaica,KIN,JM,Kingston,,,AP
 KIO,,Kili Island,5.65,169.2,5,,Pacific/Majuro,KIO,MH,Kili,Kili Island,,AP
 KIP,KCWC,Kickapoo,33.9,-98.5,1003,http://www.wichitafallstx.gov/index.aspx?nid=704,America/Chicago,SPS,US,,,,AP
 KIQ,AYRA,Kira,-8.116667,147.35,1700,,Pacific/Port_Moresby,KIQ,PG,,,,AP
@@ -4411,7 +4411,7 @@ LAO,RPLI,Laoag Airport,18.176479450000002,120.53176511814134,25,,Asia/Manila,LAO
 LAP,MMLP,Leon Airport,24.076088,-110.367836,69,http://aeropuertosgap.com.mx/aeropuertos/lapaz?lang=eng,America/Mazatlan,LAP,MX,El Centenario,Baja California Sur,La Paz,AP
 LAQ,HLLQ,La Braq Airport,32.788612,21.964167,2157,,Africa/Tripoli,LAQ,LY,Al Bayda',Al Jabal al Akhdar,,AP
 LAR,KLAR,General Brees Field,41.31361,-105.67306,7284,,America/Denver,LAR,US,Laramie,Wyoming,Albany County,AP
-LAS,KLAS,McCarran International Airport,36.0861034,-115.16111989849915,2181,http://www.mccarran.com/,America/Los_Angeles,LAS,US,,,,AP
+LAS,KLAS,McCarran International Airport,36.0861034,-115.16111989849915,2181,http://www.mccarran.com/,America/Los_Angeles,LAS,US,Las Vegas,Nevada,,AP
 LAT,,La Uribe,4.75,-74.05,0,,America/Bogota,LAT,CO,Cota,Cundinamarca,,AP
 LAU,HKLU,Lamu,-2.25,40.911667,20,http://www.kenyaairports.co.ke/kaa/airports/airstrips/manda_intro.html,Africa/Nairobi,LAU,KE,Lamu,Lamu,,AP
 LAV,,Lalomalava,-14.016667,-171.73334,0,,Pacific/Apia,LAV,WS,Matavai,,,AP

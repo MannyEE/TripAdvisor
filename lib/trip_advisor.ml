@@ -36,20 +36,19 @@ let print_optimal_route ~(origin : Location.t) ~(location_list : Location.t list
   print_string ("Day " ^ (Int.to_string day) ^ ": ");
   Google_api.print_maps_address (Tuple2.get1 best);
   return ()
- 
 ;;
 
-let run () = 
-  let date = Date.of_string "2024-09-18" in
+let _run () = 
+  (* let date = Date.of_string "2024-09-18" in
   let%bind price = Plane.plane_api ~city_code_origin:"SFO" ~city_code_destination:"NYC" ~date ~desired_info:"price" in
-  print_int price;
+  print_int price; *)
 
-  (* let%bind _airports_list = Parse_csv.read_csv ~filename:"airports.csv" in  *)
+  let%bind _airports_list = Parse_csv.read_csv ~filename:"airports.csv" in 
   (* let%bind city_codes_list = Parse_csv.read_csv ~filename:"citycodes.csv" in *)
   (* print_s[%message (airports_list : Parse_csv.Row.t list  )]; *)
   (* print_s[%message (city_codes_list : Parse_csv.Row.t list  )]; *)
 
-  (* let%bind string_origin_address = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter origin location" in
+  let%bind string_origin_address = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter origin location" in
   let%bind location_origin_address = Google_api.get_location string_origin_address in
 
   print_endline "What places would you like to visit? Put in one address at a time";
@@ -57,13 +56,25 @@ let run () =
   let%bind location_places_list = Deferred.List.map string_places_list ~how:`Sequential ~f:(fun place ->
     Google_api.get_location place
   ) in
+  let all_places = [location_origin_address] @ location_places_list in
 
   let%bind num_days = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "How many days are you traveling?" in
   let num_days = Int.of_string num_days in
 
-  let%bind travel_method = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter travel method" in
-  let all_places = [location_origin_address] @ location_places_list in
+  (* let%bind travel_method = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter travel method" in *)
   
+  let travel_method_list = ["driving" ; "walking" ; "bicycling" ; "transit"] in
+  let travel_method_list = Fzf.Pick_from.Inputs travel_method_list in
+  let%bind travel_method =
+  (Deferred.repeat_until_finished () (fun () ->
+    let%bind choice = (Fzf.pick_one travel_method_list ~header:"Enter travel method" >>| ok_exn) in 
+    match choice with
+    | Some string -> return (`Finished string)
+    | None -> return (`Repeat ())
+    ))
+  in
+
+
   print_endline "Searching Google Maps for travel times...";
   let%bind distance_data = make_destination_graph (List.dedup_and_sort all_places ~compare:Location.compare) travel_method in
   
@@ -75,13 +86,36 @@ let run () =
     let clusters = Cluster.k_means_clustering ~k:num_days ~points:location_places_list in 
     let%bind () = Deferred.List.iteri ~how:`Sequential clusters ~f:(fun idx cluster ->
       print_optimal_route ~origin:location_origin_address ~location_list:cluster ~day:(idx + 1) ~distance_data
-    ) in *)
+    ) in
     return ()
+;;
+
+
+let fuzzy_find () = 
+  let%bind airports_list = Parse_csv.read_csv ~filename:"goated_airports.csv" in 
+  let%bind citycodes_list = Parse_csv.read_csv ~filename:"citycodes.csv" in
+  let airports_list = airports_list @ citycodes_list in
+  let airports_map = List.map airports_list ~f:(fun airport -> 
+    Parse_csv.Row.convert_to_string airport, airport) |> String.Map.of_alist_exn in
+  let airports_fuzzy_list = Fzf.Pick_from.Map airports_map in
+
+  let%bind airport =
+  (Deferred.repeat_until_finished () (fun () ->
+    let%bind choice = (Fzf.pick_one airports_fuzzy_list ~case_match:`case_insensitive ~header:"Choose airport" >>| ok_exn) in 
+    match choice with
+    | Some string -> return (`Finished string)
+    | None -> return (`Repeat ())
+    ))
+  in
+  print_string (Parse_csv.Row.convert_to_string airport);
+
+  _run ()
+  (* return () *)
 ;;
 
 let command =
   Command.async
     ~summary:"Calculates Trip Route"
     (let%map_open.Command () = return () in
-    fun () -> run ())
+    fun () -> fuzzy_find ())
 ;;
