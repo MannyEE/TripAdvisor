@@ -106,13 +106,19 @@ let destination_api ~(destination : Location.t) ~(origin : Location.t) transit_m
 ;;
 
 
-let print_maps_address (directions : Location.t list) = 
+let print_maps_address ~(directions : Location.t list) ~travel_method = 
   (* let%map (formatted_directions : string list) = Deferred.List.map ~how:`Sequential directions ~f:(fun str-> 
     let%map json_str = geocode str in
     get_formatted_address json_str
   ) in *)
+  let travel_method = "&travelmode=" ^ travel_method in
+  let initial_address = "https://www.google.com/maps/dir/?api=1" in
   let formatted_directions = List.map directions ~f:(fun loc -> String.map loc.name ~f:(fun ch -> match ch with ' ' -> '+' | _ -> ch)) in
-  print_endline (List.fold formatted_directions ~init:"https://www.google.com/maps/dir/" ~f:(fun accum_str str -> 
-  accum_str ^ str ^ "/"
+  let origin = "&origin=" ^ (List.hd_exn formatted_directions) in 
+  let destination = "&destination=" ^ (List.last_exn formatted_directions) in
+  let formatted_directions = List.tl_exn formatted_directions |> List.drop_last_exn in
+  let starting_address = initial_address ^ origin ^ destination ^ travel_method in
+  print_endline (List.fold formatted_directions ~init:(starting_address ^ "&waypoints=") ~f:(fun accum_str str -> 
+  accum_str ^ str ^ "%7C"
   ));
 ;;

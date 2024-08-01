@@ -28,13 +28,13 @@ let make_destination_graph (places_list : Location.t list) transport_mode =
   return map
 ;;
 
-let print_optimal_route ~(origin : Location.t) ~(location_list : Location.t list) ~(day : int) ~distance_data=
+let print_optimal_route ~(origin : Location.t) ~(location_list : Location.t list) ~(day : int) ~distance_data ~travel_method =
   (* print_s [%sexp (graph : Time_ns.Span.t String.Table.t String.Table.t )]; *)
   (* let (best_path, best_time) = Tsp.get_shortest_path ~origin:origin_address ~dest_list:places_list ~path_map:graph in *)
   let best = Tsp.Time_span.get_shortest_path ~origin ~dest_list:location_list ~path_map:distance_data in
   (* print_s [%message (best : (Location.t list * Time_ns.Span.t))]; *)
   print_string ("Day " ^ (Int.to_string day) ^ ": ");
-  Google_api.print_maps_address (Tuple2.get1 best);
+  Google_api.print_maps_address ~directions:(Tuple2.get1 best) ~travel_method;
   return ()
 ;;
 
@@ -43,7 +43,7 @@ let _run () =
   let%bind price = Plane.plane_api ~city_code_origin:"SFO" ~city_code_destination:"NYC" ~date ~desired_info:"price" in
   print_int price; *)
 
-  let%bind _airports_list = Parse_csv.read_csv ~filename:"airports.csv" in 
+  (* let%bind _airports_list = Parse_csv.read_csv ~filename:"airports.csv" in  *)
   (* let%bind city_codes_list = Parse_csv.read_csv ~filename:"citycodes.csv" in *)
   (* print_s[%message (airports_list : Parse_csv.Row.t list  )]; *)
   (* print_s[%message (city_codes_list : Parse_csv.Row.t list  )]; *)
@@ -80,21 +80,19 @@ let _run () =
   
   print_endline "Computing Optimal Route...";
   if num_days = 1 then 
-    let%bind () = print_optimal_route ~origin:location_origin_address ~location_list:location_places_list ~day:1 ~distance_data in
+    let%bind () = print_optimal_route ~origin:location_origin_address ~location_list:location_places_list ~day:1 ~distance_data ~travel_method in
     return ()
   else 
     let clusters = Cluster.k_means_clustering ~k:num_days ~points:location_places_list in 
     let%bind () = Deferred.List.iteri ~how:`Sequential clusters ~f:(fun idx cluster ->
-      print_optimal_route ~origin:location_origin_address ~location_list:cluster ~day:(idx + 1) ~distance_data
+      print_optimal_route ~origin:location_origin_address ~location_list:cluster ~day:(idx + 1) ~distance_data ~travel_method
     ) in
     return ()
 ;;
 
 
 let fuzzy_find () = 
-  let%bind airports_list = Parse_csv.read_csv ~filename:"goated_airports.csv" in 
-  let%bind citycodes_list = Parse_csv.read_csv ~filename:"citycodes.csv" in
-  let airports_list = airports_list @ citycodes_list in
+  let%bind airports_list = Parse_csv.get_all_airports () in
   let airports_map = List.map airports_list ~f:(fun airport -> 
     Parse_csv.Row.convert_to_string airport, airport) |> String.Map.of_alist_exn in
   let airports_fuzzy_list = Fzf.Pick_from.Map airports_map in

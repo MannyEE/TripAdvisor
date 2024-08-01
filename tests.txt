@@ -22,3 +22,28 @@ NYU Stern School of Business, 44 West 4th Street, New York, NY 10012
 Central Park
 The Museum of Modern Art, 11 W 53rd St, New York, NY 10019
 Museum of Arts and Design, 2 Columbus Cir, New York, NY 10019
+
+
+
+
+https://www.google.com/maps/dir/70+Pine+Street,+70+Pine+St,+New+York,+NY+10005/
+The+Museum+of+Modern+Art,+11+W+53rd+St,+New+York,+NY+10019
+/
+Central+Park
+/
+Museum+of+Arts+and+Design,+2+Columbus+Cir,+New+York,+NY+10019
+
+https://www.google.com/maps/dir/&origin=70+Pine+Street,+70+Pine+St,+New+York,+NY+10005/&destination=The+Museum+of+Modern+Art,+11+W+53rd+St,+New+York,+NY+10019/Central+Park/Museum+of+Arts+and+Design,+2+Columbus+Cir,+New+York,+NY+10019/
+
+
+https://www.google.com/maps/dir/?api=1&origin=Space+Needle+Seattle+WA&destination=Pike+Place+Market+Seattle+WA&travelmode=bicycling
+
+https://www.google.com/maps/dir/?api=1&origin=70+Pine+Street,+70+Pine+St,+New+York,+NY+10005&destination=Pike+Place+Market+Seattle+WA&travelmode=bicycling
+
+70+Pine+Street,+70+Pine+St,+New+York,+NY+10005
+
+https://www.google.com/maps/dir/?api=1&origin=70+Pine+Street,+70+Pine+St,+New+York,+NY+10005&destination=Cherbourg%2CFrance&travelmode=driving&waypoints=Central+Park%7CMuseum+of+Arts+and+Design,+2+Columbus+Cir,+New+York,+NY+10019
+
+https://www.google.com/maps/dir/?api=1&origin=70+Pine+Street,+70+Pine+St,+New+York,+NY+10005&destination=250+Vessey+St&travelmode=walking&waypoints=Central+Park%7CMuseum+of+Arts+and+Design,+2+Columbus+Cir,+New+York,+NY+10019
+
+https://www.google.com/maps/dir/&origin=70+Pine+Street,+70+Pine+St,+New+York,+NY+10005&destination=250+Vessey+St&travelmode=walking&waypoints=Central+Park%7CMuseum+of+Arts+and+Design,+2+Columbus+Cir,+New+York,+NY+10019
