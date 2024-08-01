@@ -117,7 +117,8 @@ let create_empty_coordinate_location ~(lat : float) ~(long : float) =
     place_id = "" ;
     name = "" ;
     formatted_address = "" ;
-    coordinates =  Coordinates.{lat ; long}
+    coordinates =  Coordinates.{lat ; long};
+    airport_code = ""
   }
 ;;
 

@@ -90,7 +90,7 @@ let get_location (name : string) : Location.t Deferred.t =
   let formatted_address = get_formatted_address geocode in 
   let coordinates = get_coordinates geocode in
   {
-    Location.place_id = place_id ; name = name ; formatted_address = formatted_address ; coordinates = coordinates
+    Location.place_id = place_id ; name = name ; formatted_address = formatted_address ; coordinates = coordinates; airport_code = ""
   }
 ;;
 let place_id_api address = 
