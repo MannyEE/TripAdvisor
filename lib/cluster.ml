@@ -99,19 +99,6 @@ let k_means_clustering ~k ~points =
   List.map cluster_deque_list ~f:(fun deque -> Deque.to_list deque)
 ;;
 
-(* 
-let plan_multi_trip =
-  let%bind num_trip_days = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "How long is your stay?" in
-  let%bind string_origin_address = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter origin location" in
-  let%bind location_origin_address = Google_api.get_location string_origin_address in
-
-  print_endline "What places would you like to visit? Put in one address at a time";
-  let%bind string_places_list = Trip_advisor.get_desired_places () in
-
-
-
-;; *)
-
 let create_empty_coordinate_location ~(lat : float) ~(long : float) = 
   Location.{
     place_id = "" ;

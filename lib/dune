@@ -12,6 +12,7 @@
   core_unix.command_unix
   file_path
   lambdasoup
-  curl)
+  curl
+  delimited_parsing)
  (preprocess
   (pps ppx_jane ppx_inline_test)))
