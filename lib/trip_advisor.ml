@@ -1,6 +1,8 @@
 open! Core
 open Async
 
+
+
 let rec get_desired_places ((): unit) = 
   let%bind input = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter destination (or ENTER to stop)" in
   match String.equal input "" with 
@@ -11,58 +13,71 @@ let rec get_desired_places ((): unit) =
       input :: places_list
 ;;
 
-let make_destination_graph (places_list : Location.t list) transport_mode = 
-  let map = Location.Table.create () in
-  let%bind () = Deferred.List.iter ~how:`Parallel places_list ~f:(fun origin -> 
-    let empty_tbl = Hashtbl.find_or_add map origin ~default:Location.Table.create in
-
-    Deferred.List.iter ~how:`Parallel places_list ~f:(fun destination ->
-      match [%compare.equal:Location.t] origin destination with 
-      | true -> return ()
-      | false -> 
-        let%bind distance = Google_api.destination_api ~origin ~destination transport_mode in
-        Hashtbl.add_exn (empty_tbl) ~key:destination ~data:distance;
-        return()
-    ) 
-  ) in
-  return map
-;;
-
-let print_optimal_route ~(origin : Location.t) ~(location_list : Location.t list) ~(day : int) ~distance_data ~travel_method =
-  (* print_s [%sexp (graph : Time_ns.Span.t String.Table.t String.Table.t )]; *)
-  (* let (best_path, best_time) = Tsp.get_shortest_path ~origin:origin_address ~dest_list:places_list ~path_map:graph in *)
-  let best = Tsp.Time_span.get_shortest_path ~origin ~dest_list:location_list ~path_map:distance_data in
-  (* print_s [%message (best : (Location.t list * Time_ns.Span.t))]; *)
+let print_optimal_google_route ~(day : int) ~(best_route) ~travel_method =
   print_string ("Day " ^ (Int.to_string day) ^ ": ");
-  Google_api.print_maps_address ~directions:(Tuple2.get1 best) ~travel_method;
+  Google_api.print_maps_address ~directions:(best_route) ~travel_method;
   return ()
 ;;
 
-let _run () = 
+let run () = 
   (* let date = Date.of_string "2024-09-18" in
   let%bind price = Plane.plane_api ~city_code_origin:"SFO" ~city_code_destination:"NYC" ~date ~desired_info:"price" in
   print_int price; *)
 
-  (* let%bind _airports_list = Parse_csv.read_csv ~filename:"airports.csv" in  *)
-  (* let%bind city_codes_list = Parse_csv.read_csv ~filename:"citycodes.csv" in *)
-  (* print_s[%message (airports_list : Parse_csv.Row.t list  )]; *)
-  (* print_s[%message (city_codes_list : Parse_csv.Row.t list  )]; *)
+  let%bind flying = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Do you plan on flying to your destinations" in
 
-  let%bind string_origin_address = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter origin location" in
-  let%bind location_origin_address = Google_api.get_location string_origin_address in
+  match flying with
+  | "Yes" ->
+    let%bind desired_optimization = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Should we optimize your flights for time or price?" in (*Should only be able to put time or price*)
+    let%bind _departure_date = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "What day would you like to leave (Enter in YYYYMMDD)" in
+    let%bind _stay_length = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "How many days would you like to stay in each city?" in
+    let%bind string_origin_address = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter origin location" in
+    let origin_area_code = Plane.get_airport_code string_origin_address in
+    print_endline "What places would you like to visit? Put in one address at a time";
+    let%bind cities = get_desired_places () in
+    let area_codes = List.map cities ~f:(fun location -> Plane.get_airport_code location) in
+    let all_places = [origin_area_code] @ area_codes in
+    let sorted_city_list = List.dedup_and_sort all_places ~compare:Airport_code.compare in
+    print_endline "Searching for travel Info...";
+    let date = Date.of_string "20001212" in
 
-  print_endline "What places would you like to visit? Put in one address at a time";
-  let%bind string_places_list = get_desired_places () in
-  let%bind location_places_list = Deferred.List.map string_places_list ~how:`Sequential ~f:(fun place ->
-    Google_api.get_location place
-  ) in
-  let all_places = [location_origin_address] @ location_places_list in
 
-  let%bind num_days = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "How many days are you traveling?" in
-  let num_days = Int.of_string num_days in
+    print_endline "Computing Optimal Route...";
+    let%map _optimal_route = 
+    (match desired_optimization with 
+      | "time" -> 
+        let%map (distance_data) = Tsp.Flight_duration.make_destination_graph (sorted_city_list) date in
+        let best = Tsp.Flight_duration.get_shortest_path ~origin:origin_area_code ~dest_list:cities ~path_map:distance_data in
+        fst best
+        
+      | "price" ->
+        let%map (distance_data) = Tsp.Flight_prices.make_destination_graph (sorted_city_list) date in
+        let best = Tsp.Flight_prices.get_shortest_path ~origin:origin_area_code ~dest_list:cities ~path_map:distance_data in
+        fst best
+      | _ -> assert false) in
 
-  (* let%bind travel_method = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter travel method" in *)
+    
+
+
+    ()
+    (* List.iter dis *)
+
+
+
+  | "No" ->
   
+    let%bind string_origin_address = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter origin location" in
+    let%bind location_origin_address = Google_api.get_location string_origin_address in
+
+    print_endline "What places would you like to visit? Put in one address at a time";
+    let%bind string_places_list = get_desired_places () in
+    let%bind location_places_list = Deferred.List.map string_places_list ~how:`Sequential ~f:(fun place ->
+      Google_api.get_location place
+    ) in
+
+    let%bind num_days = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "How many days are you traveling?" in
+    let num_days = Int.of_string num_days in
+
   let travel_method_list = ["driving" ; "walking" ; "bicycling" ; "transit"] in
   let travel_method_list = Fzf.Pick_from.Inputs travel_method_list in
   let%bind travel_method =
@@ -73,21 +88,26 @@ let _run () =
     | None -> return (`Repeat ())
     ))
   in
+  let all_places = [location_origin_address] @ location_places_list in
+    
+    print_endline "Searching Google Maps for travel times...";
+    let%bind distance_data = Tsp.Intra_city_duration.make_destination_graph (List.dedup_and_sort all_places ~compare:Location.compare) travel_method in
+    
+    print_endline "Computing Optimal Route...";
 
-
-  print_endline "Searching Google Maps for travel times...";
-  let%bind distance_data = make_destination_graph (List.dedup_and_sort all_places ~compare:Location.compare) travel_method in
-  
-  print_endline "Computing Optimal Route...";
-  if num_days = 1 then 
-    let%bind () = print_optimal_route ~origin:location_origin_address ~location_list:location_places_list ~day:1 ~distance_data ~travel_method in
+    
+    if num_days = 1 then 
+      let best = Tsp.Intra_city_duration.get_shortest_path ~origin:location_origin_address ~dest_list:location_places_list ~path_map:distance_data in
+      let%bind () = print_optimal_google_route ~day:1 ~best_route:(fst best) ~travel_method in
+      return ()
+    else 
+      let clusters = Cluster.k_means_clustering ~k:num_days ~points:location_places_list in 
+      let%bind () = Deferred.List.iteri ~how:`Sequential clusters ~f:(fun idx cluster ->
+        let best = Tsp.Intra_city_duration.get_shortest_path ~origin:location_origin_address ~dest_list:cluster ~path_map:distance_data in
+        print_optimal_google_route ~day:(idx + 1) ~best_route:(fst best) ~travel_method;
+      ) in
     return ()
-  else 
-    let clusters = Cluster.k_means_clustering ~k:num_days ~points:location_places_list in 
-    let%bind () = Deferred.List.iteri ~how:`Sequential clusters ~f:(fun idx cluster ->
-      print_optimal_route ~origin:location_origin_address ~location_list:cluster ~day:(idx + 1) ~distance_data ~travel_method
-    ) in
-    return ()
+  | _ -> assert false
 ;;
 
 
@@ -107,9 +127,30 @@ let fuzzy_find () =
   in
   print_string (Parse_csv.Row.convert_to_string airport);
 
-  _run ()
+  run ()
   (* return () *)
 ;;
+
+(* 
+let fuzzy_find () = 
+  let%bind airports_list = Parse_csv.get_all_airports () in
+  let airports_map = List.map airports_list ~f:(fun airport -> 
+    Parse_csv.Row.convert_to_string airport, airport) |> String.Map.of_alist_exn in
+  let airports_fuzzy_list = Fzf.Pick_from.Map airports_map in
+
+  let%bind airport =
+  (Deferred.repeat_until_finished () (fun () ->
+    let%bind choice = (Fzf.pick_one airports_fuzzy_list ~case_match:`case_insensitive ~header:"Choose airport" >>| ok_exn) in 
+    match choice with
+    | Some string -> return (`Finished string)
+    | None -> return (`Repeat ())
+    ))
+  in
+  print_string (Parse_csv.Row.convert_to_string airport);
+
+  run ()
+  (* return () *)
+;; *)
 
 let command =
   Command.async

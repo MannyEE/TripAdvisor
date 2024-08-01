@@ -15,7 +15,9 @@ type t =
   place_id : string ;
   name : string ;
   formatted_address : string ;
-  coordinates : Coordinates.t
+  coordinates : Coordinates.t ;
+  airport_code : string
+  
 } [@@deriving compare, hash, sexp_of]
 
 end
