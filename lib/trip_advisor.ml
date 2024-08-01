@@ -13,19 +13,11 @@ let rec get_desired_places ((): unit) =
       input :: places_list
 ;;
 
-
-
-let print_optimal_route ~(origin : Location.t) ~(location_list : Location.t list) ~(day : int) ~distance_data=
-  (* print_s [%sexp (graph : Time_ns.Span.t String.Table.t String.Table.t )]; *)
-  (* let (best_path, best_time) = Tsp.get_shortest_path ~origin:origin_address ~dest_list:places_list ~path_map:graph in *)
-  let best = Tsp.Intra_city_duration.get_shortest_path ~origin ~dest_list:location_list ~path_map:distance_data in
-  (* print_s [%message (best : (Location.t list * Time_ns.Span.t))]; *)
+let print_optimal_google_route ~(day : int) (best_route) =
   print_string ("Day " ^ (Int.to_string day) ^ ": ");
-  Google_api.print_maps_address (Tuple2.get1 best);
+  Google_api.print_maps_address (best_route);
   return ()
 ;;
-
-let get_best_route (module anything : Tsp.S)
 
 let run () = 
   (* let date = Date.of_string "2024-09-18" in
@@ -51,7 +43,7 @@ let run () =
 
 
     print_endline "Computing Optimal Route...";
-    let%map optimal_route = 
+    let%map _optimal_route = 
     (match desired_optimization with 
       | "time" -> 
         let%map (distance_data) = Tsp.Flight_duration.make_destination_graph (sorted_city_list) date in
@@ -93,13 +85,17 @@ let run () =
     let%bind distance_data = Tsp.Intra_city_duration.make_destination_graph (List.dedup_and_sort all_places ~compare:Location.compare) travel_method in
     
     print_endline "Computing Optimal Route...";
+
+    
     if num_days = 1 then 
-      let%bind () = print_optimal_route ~origin:location_origin_address ~location_list:location_places_list ~day:1 ~distance_data in
+      let best = Tsp.Intra_city_duration.get_shortest_path ~origin:location_origin_address ~dest_list:location_places_list ~path_map:distance_data in
+      let%bind () = print_optimal_google_route ~day:1 (fst best) in
       return ()
     else 
       let clusters = Cluster.k_means_clustering ~k:num_days ~points:location_places_list in 
       let%bind () = Deferred.List.iteri ~how:`Sequential clusters ~f:(fun idx cluster ->
-        print_optimal_route ~origin:location_origin_address ~location_list:cluster ~day:(idx + 1) ~distance_data
+        let best = Tsp.Intra_city_duration.get_shortest_path ~origin:location_origin_address ~dest_list:cluster ~path_map:distance_data in
+        print_optimal_google_route ~day:(idx + 1) (fst best);
       ) in
     return ()
   | _ -> assert false

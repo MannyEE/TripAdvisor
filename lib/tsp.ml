@@ -42,8 +42,6 @@ module type Arg = sig
 
 end
 
-let f x : int = 5 ;;
-
 module Make_tsp (Arg : Arg) : S with type weight = Arg.Weight.t and type node = Arg.Node.t and type additional_weight_arg = Arg.Additional_weight_arg.t = struct 
   
   type weight = Arg.Weight.t
@@ -133,6 +131,7 @@ let make_destination_graph (places_list : Node.t list) additional_arg=
   ) in
   return map
 ;;
+
 
 
 end
