@@ -20,44 +20,86 @@ let print_optimal_google_route ~(day : int) ~(best_route) ~travel_method =
 ;;
 
 
-let fuzzy_find_airport () = 
+
+let fzf_choose_between ~(options_list : string list) ~(message : string)  =
+  let options_list = Fzf.Pick_from.Inputs options_list in
+  (Deferred.repeat_until_finished () (fun () ->
+    let%bind choice = (Fzf.pick_one options_list ~header:message >>| ok_exn) in 
+    match choice with
+    | Some string -> return (`Finished string)
+    | None -> return (`Repeat ())
+  ))
+;;
+
+let find_origin_airport () = 
   let%bind airports_list = Parse_csv.get_all_airports () in
   let airports_map = List.map airports_list ~f:(fun airport -> 
     Airport.convert_to_string airport, airport) |> String.Map.of_alist_exn in
   let airports_fuzzy_list = Fzf.Pick_from.Map airports_map in
-
   let%bind airport =
   (Deferred.repeat_until_finished () (fun () ->
-    let%bind choice = (Fzf.pick_one airports_fuzzy_list ~case_match:`case_insensitive ~header:"Choose airport" >>| ok_exn) in 
+    let%bind choice = (Fzf.pick_one airports_fuzzy_list ~case_match:`case_insensitive ~header:"Choose origin airport" >>| ok_exn) in 
     match choice with
-    | Some string -> return (`Finished string)
-    | None -> return (`Repeat ())
+    | Some airport -> return (`Finished airport)
+    | None -> 
+      ( print_string "Trying to quit";
+        return (`Repeat ()))
     ))
   in
   return airport
   (* return () *)
 ;;
 
+let find_destination_airports () = 
+  let%bind airports_list = Parse_csv.get_all_airports () in
+  let airports_map = List.map airports_list ~f:(fun airport -> 
+    Airport.convert_to_string airport, airport) |> String.Map.of_alist_exn in
+  let airports_fuzzy_list = Fzf.Pick_from.Map airports_map in
+
+  Deferred.repeat_until_finished [] (fun cur_list ->
+    let cur_route = List.to_string cur_list ~f:(fun airport -> airport.name) in
+    let%bind choice = (Fzf.pick_one airports_fuzzy_list ~case_match:`case_insensitive ~header:"Choose destination airports (ESC to quit)\nCurrent Route: " >>| ok_exn) in 
+    match choice with
+    | Some airport -> (
+      let new_list = airport :: cur_list in
+      return (`Repeat new_list)
+    )
+    | None -> (
+      if List.length cur_list < 1 then (return (`Repeat cur_list) )
+      else
+        return (`Finished cur_list)
+    )
+    )
+  
+  (* return () *)
+;;
+
+
+
 let run () = 
   (* let date = Date.of_string "2024-09-18" in
   let%bind price = Plane.plane_api ~city_code_origin:"SFO" ~city_code_destination:"NYC" ~date ~desired_info:"price" in
   print_int price; *)
 
-  let%bind flying = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Do you plan on flying to your destinations" in
+  (* let%bind flying = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Do you plan on flying to your destinations" in *)
+
+  let flying_options_list = [ "No" ; "Yes"] in
+  let%bind flying = fzf_choose_between ~options_list:flying_options_list ~message:"Do you plan on flying to your destinations" in
 
   match flying with
   | "Yes" ->
-    let%bind desired_optimization = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Should we optimize your flights for time or price?" in (*Should only be able to put time or price*)
+    let optimize_options_list = ["time" ; "price"] in 
+    let%bind desired_optimization = fzf_choose_between ~options_list:optimize_options_list ~message:"How should we optimize your flights?" in
+
     let%bind _departure_date = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "What day would you like to leave (Enter in YYYYMMDD)" in
     let%bind _stay_length = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "How many days would you like to stay in each city?" in
-    let%bind airport_origin_address = fuzzy_find_airport () in
+    let%bind airport_origin_address = find_origin_airport () in
     print_s [%message (airport_origin_address : Airport.t)];
     (* let origin_area_code = airport_origin_address.code in *)
     print_endline "What places would you like to visit? Put in one address at a time";
 
     (*fix this*)
-    let%bind cities = (fuzzy_find_airport ()) in
-    let cities = [cities] in
+    let%bind cities = (find_destination_airports ()) in
 
     (* let area_codes = List.map cities ~f:(fun location -> location.code) in *)
     let all_places = [airport_origin_address] @ cities in
@@ -133,6 +175,30 @@ let run () =
     return ()
   | _ -> assert false
 ;;
+
+
+(* 
+
+let fzf_get_airport () = 
+  let%bind airports_list = Parse_csv.get_all_airports () in
+  let airports_map = List.map airports_list ~f:(fun airport -> 
+    Airport.convert_to_string airport, airport) |> String.Map.of_alist_exn in
+  let airports_fuzzy_list = Fzf.Pick_from.Map airports_map in
+
+  let%bind airport =
+  (Deferred.repeat_until_finished () (fun () ->
+    let%bind choice = (Fzf.pick_one airports_fuzzy_list ~case_match:`case_insensitive ~header:"Choose airport" >>| ok_exn) in 
+    match choice with
+    | Some string -> return (`Finished string)
+    | None -> return (`Repeat ())
+    ))
+  in
+  return airport
+;;
+
+
+let  *)
+
 
 
 

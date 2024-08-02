@@ -166,6 +166,6 @@ module Flight_prices = Make_tsp (struct
     let compute_weight (origin_airport : Airport.t) (destination_airport : Airport.t) (date : Date.t) : Weight.t Deferred.t = 
       let origin_city_code = origin_airport.code in 
       let destination_city_code = destination_airport.code in 
-      Plane.plane_api ~origin_city_code ~destination_city_code ~date ~optimization:"duration"
+      Plane.plane_api ~origin_city_code ~destination_city_code ~date ~optimization:"price"
   end)
 
