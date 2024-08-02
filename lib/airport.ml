@@ -12,3 +12,8 @@ end
   include T
   include Hashable.Make_plain(T)
   include Comparable.Make_plain(T)
+
+  let convert_to_string (row : t) = 
+    let comma = ", " in
+    row.code ^ comma ^ row.name ^ comma ^ (Option.value(row.city) ~default:"") ^ comma ^ (Option.value(row.country) ~default:"") ^ comma ^ (Option.value(row.keywords) ~default:"")
+  ;;

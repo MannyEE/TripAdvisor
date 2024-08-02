@@ -23,7 +23,7 @@ let print_optimal_google_route ~(day : int) ~(best_route) ~travel_method =
 let fuzzy_find_airport () = 
   let%bind airports_list = Parse_csv.get_all_airports () in
   let airports_map = List.map airports_list ~f:(fun airport -> 
-    Parse_csv.Airport.convert_to_string airport, airport) |> String.Map.of_alist_exn in
+    Airport.convert_to_string airport, airport) |> String.Map.of_alist_exn in
   let airports_fuzzy_list = Fzf.Pick_from.Map airports_map in
 
   let%bind airport =
@@ -67,7 +67,7 @@ let run () =
 
 
     print_endline "Computing Optimal Route...";
-    let%map _optimal_route = 
+    let%map optimal_route = 
     (match desired_optimization with 
       | "time" -> 
         let%map (distance_data) = Tsp.Flight_duration.make_destination_graph (sorted_city_list) date in
@@ -80,7 +80,7 @@ let run () =
         fst best
       | _ -> assert false) in
 
-    
+    print_s [%sexp (optimal_route: Airport.t list)];
 
 
     ()
