@@ -148,20 +148,24 @@ module Intra_city_duration = Make_tsp (struct
 
 module Flight_duration = Make_tsp (struct 
   module Weight = Time_ns.Span
-  module Node = Airport_code 
+  module Node = Airport
   module Additional_weight_arg = Date
 
-  let compute_weight (origin_city_code : Airport_code.t) (destination_city_code : Airport_code.t) (date : Date.t) : Weight.t Deferred.t = 
+  let compute_weight (origin_airport : Airport.t) (destination_airport : Airport.t) (date : Date.t) : Weight.t Deferred.t = 
+    let origin_city_code = origin_airport.code in 
+    let destination_city_code = destination_airport.code in 
      let%map time = Plane.plane_api ~origin_city_code ~destination_city_code ~date ~optimization:"duration" in
      Time_ns.Span.of_int_sec time
   end)
 
 module Flight_prices = Make_tsp (struct 
   module Weight = Int
-  module Node = Airport_code
+  module Node = Airport
   module Additional_weight_arg = Date
 
-    let compute_weight (origin_city_code : Airport_code.t) (destination_city_code : Airport_code.t) (date : Date.t) : Weight.t Deferred.t = 
+    let compute_weight (origin_airport : Airport.t) (destination_airport : Airport.t) (date : Date.t) : Weight.t Deferred.t = 
+      let origin_city_code = origin_airport.code in 
+      let destination_city_code = destination_airport.code in 
       Plane.plane_api ~origin_city_code ~destination_city_code ~date ~optimization:"duration"
   end)
 

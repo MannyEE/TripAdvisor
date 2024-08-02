@@ -23,7 +23,7 @@ let print_optimal_google_route ~(day : int) ~(best_route) ~travel_method =
 let fuzzy_find_airport () = 
   let%bind airports_list = Parse_csv.get_all_airports () in
   let airports_map = List.map airports_list ~f:(fun airport -> 
-    Parse_csv.Row.convert_to_string airport, airport) |> String.Map.of_alist_exn in
+    Parse_csv.Airport.convert_to_string airport, airport) |> String.Map.of_alist_exn in
   let airports_fuzzy_list = Fzf.Pick_from.Map airports_map in
 
   let%bind airport =
@@ -34,7 +34,7 @@ let fuzzy_find_airport () =
     | None -> return (`Repeat ())
     ))
   in
-  return (Parse_csv.Row.convert_to_string airport)
+  return airport
   (* return () *)
 ;;
 
@@ -50,13 +50,18 @@ let run () =
     let%bind desired_optimization = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Should we optimize your flights for time or price?" in (*Should only be able to put time or price*)
     let%bind _departure_date = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "What day would you like to leave (Enter in YYYYMMDD)" in
     let%bind _stay_length = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "How many days would you like to stay in each city?" in
-    let%bind string_origin_address = fuzzy_find_airport () in
-    let origin_area_code = Plane.get_airport_code string_origin_address in
+    let%bind airport_origin_address = fuzzy_find_airport () in
+    print_s [%message (airport_origin_address : Airport.t)];
+    (* let origin_area_code = airport_origin_address.code in *)
     print_endline "What places would you like to visit? Put in one address at a time";
-    let%bind cities = get_desired_places () in
-    let area_codes = List.map cities ~f:(fun location -> Plane.get_airport_code location) in
-    let all_places = [origin_area_code] @ area_codes in
-    let sorted_city_list = List.dedup_and_sort all_places ~compare:Airport_code.compare in
+
+    (*fix this*)
+    let%bind cities = (fuzzy_find_airport ()) in
+    let cities = [cities] in
+
+    (* let area_codes = List.map cities ~f:(fun location -> location.code) in *)
+    let all_places = [airport_origin_address] @ cities in
+    let sorted_city_list = List.dedup_and_sort all_places ~compare:Airport.compare in
     print_endline "Searching for travel Info...";
     let date = Date.of_string "20001212" in
 
@@ -66,12 +71,12 @@ let run () =
     (match desired_optimization with 
       | "time" -> 
         let%map (distance_data) = Tsp.Flight_duration.make_destination_graph (sorted_city_list) date in
-        let best = Tsp.Flight_duration.get_shortest_path ~origin:origin_area_code ~dest_list:cities ~path_map:distance_data in
+        let best = Tsp.Flight_duration.get_shortest_path ~origin:airport_origin_address ~dest_list:cities ~path_map:distance_data in
         fst best
         
       | "price" ->
         let%map (distance_data) = Tsp.Flight_prices.make_destination_graph (sorted_city_list) date in
-        let best = Tsp.Flight_prices.get_shortest_path ~origin:origin_area_code ~dest_list:cities ~path_map:distance_data in
+        let best = Tsp.Flight_prices.get_shortest_path ~origin:airport_origin_address ~dest_list:cities ~path_map:distance_data in
         fst best
       | _ -> assert false) in
 

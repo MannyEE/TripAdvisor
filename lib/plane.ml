@@ -60,7 +60,3 @@ let plane_api ~origin_city_code ~destination_city_code ~date ~(optimization : st
   let price = parse_kayak_for_prices kayak_json ~optimization in
   return price
 ;;
-
-let get_airport_code (_city : string) : Airport_code.t = "SFO"
-
-;;
