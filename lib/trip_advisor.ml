@@ -50,7 +50,7 @@ let find_origin_airport () =
   (* return () *)
 ;;
 
-let find_destination_airports () = 
+let find_destination_airports origin_str = 
   let%bind airports_list = Parse_csv.get_all_airports () in
   let airports_map = List.map airports_list ~f:(fun airport -> 
     Airport.convert_to_string airport, airport) |> String.Map.of_alist_exn in
@@ -59,7 +59,7 @@ let find_destination_airports () =
   Deferred.repeat_until_finished [] (fun cur_list ->
     let cur_route = String.concat ~sep:", " (List.map cur_list ~f:(fun airport -> Airport.(airport.name) ^ " (" ^ airport.code ^ ")")) in
 
-    let%bind choice = (Fzf.pick_one airports_fuzzy_list ~case_match:`case_insensitive ~header:("Choose destination airports (ESC to quit)\nOrigin" ^ "ADD ORIGIN" ^ "Current Route: " ^ cur_route) >>| ok_exn) in 
+    let%bind choice = (Fzf.pick_one airports_fuzzy_list ~case_match:`case_insensitive ~header:("Choose destination airports (ESC to quit)\nOrigin: " ^ origin_str ^ " | Current Route: " ^ cur_route) >>| ok_exn) in 
     match choice with
     | Some airport -> (
       let new_list = cur_list @ [airport] in
@@ -100,7 +100,7 @@ let run () =
     print_endline "What places would you like to visit? Put in one address at a time";
 
     (*fix this*)
-    let%bind cities = (find_destination_airports ()) in
+    let%bind cities = (find_destination_airports (Airport.(airport_origin_address.name) ^ " (" ^ airport_origin_address.code ^ ")")) in
 
     (* let area_codes = List.map cities ~f:(fun location -> location.code) in *)
     let all_places = [airport_origin_address] @ cities in
