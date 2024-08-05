@@ -7,8 +7,12 @@ open Async
     and name = at_header "name" ~f:Fn.id
     and city = at_header_opt "municipality" ~f:Fn.id
     and country = at_header "iso_country" ~f:(Map.find country_map)
-    and keywords = at_header_opt "keywords" ~f:Fn.id in
-    if String.is_empty code then failwith "No code" else
+    and keywords = at_header_opt "keywords" ~f:Fn.id
+    and airport_type = at_header "type" ~f:Fn.id in
+    if not (String.is_suffix airport_type ~suffix:"airport") then failwith "not an airport"
+    else if String.equal airport_type "small_airport" then failwith "airport too small there's probably not a flight for it on kayak"
+    else if not (String.equal airport_type "large_airport") then failwith "ONLY LARGE AIRPORTS"
+    else if String.is_empty code then failwith "No code" else
     Airport.{ code ; name ; city ; country ; keywords}
   ;;
 

@@ -38,7 +38,7 @@ let find_origin_airport () =
   let airports_fuzzy_list = Fzf.Pick_from.Map airports_map in
   let%bind airport =
   (Deferred.repeat_until_finished () (fun () ->
-    let%bind choice = (Fzf.pick_one airports_fuzzy_list ~case_match:`case_insensitive ~header:"Choose origin airport" >>| ok_exn) in 
+    let%bind choice = (Fzf.pick_one airports_fuzzy_list ~case_match:`case_insensitive ~tiebreak:(Nonempty_list.of_list_exn ([Fzf.Tiebreak.Begin])) ~header:"Choose origin airport" >>| ok_exn) in 
     match choice with
     | Some airport -> return (`Finished airport)
     | None -> 
@@ -58,7 +58,7 @@ let find_destination_airports origin_str =
   Deferred.repeat_until_finished [] (fun cur_list ->
     let cur_route = String.concat ~sep:", " (List.map cur_list ~f:(fun airport -> Airport.(airport.name) ^ " (" ^ airport.code ^ ")")) in
 
-    let%bind choice = (Fzf.pick_one airports_fuzzy_list ~case_match:`case_insensitive ~header:("Choose destination airports (ESC to quit)\nOrigin: " ^ origin_str ^ " | Current Route: " ^ cur_route) >>| ok_exn) in 
+    let%bind choice = (Fzf.pick_one airports_fuzzy_list ~case_match:`case_insensitive ~tiebreak:(Nonempty_list.of_list_exn ([Fzf.Tiebreak.Begin])) ~header:("Choose destination airports (ESC to quit)\nOrigin: " ^ origin_str ^ " | Current Route: " ^ cur_route) >>| ok_exn) in 
     match choice with
     | Some airport -> (
       let new_list = cur_list @ [airport] in
@@ -78,10 +78,10 @@ let find_destination_airports origin_str =
 
 let run () = 
   (* let date = Date.of_string "2024-09-18" in
-  let%bind _price = Plane.plane_api ~origin_city_code:"SFO" ~destination_city_code:"NYC" ~date ~optimization:"price" in
+  let%bind price = Plane.plane_api ~city_code_origin:"SFO" ~city_code_destination:"NYC" ~date ~desired_info:"price" in
   print_int price; *)
-(* 
-  let%bind flying = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Do you plan on flying to your destinations" in *)
+
+  (* let%bind flying = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Do you plan on flying to your destinations" in *)
 
   let flying_options_list = [ "No" ; "Yes"] in
   let%bind flying = fzf_choose_between ~options_list:flying_options_list ~message:"Do you plan on flying to your destinations" in
