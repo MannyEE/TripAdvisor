@@ -57,11 +57,12 @@ let find_destination_airports () =
   let airports_fuzzy_list = Fzf.Pick_from.Map airports_map in
 
   Deferred.repeat_until_finished [] (fun cur_list ->
-    let cur_route = List.to_string cur_list ~f:(fun airport -> airport.name) in
-    let%bind choice = (Fzf.pick_one airports_fuzzy_list ~case_match:`case_insensitive ~header:"Choose destination airports (ESC to quit)\nCurrent Route: " >>| ok_exn) in 
+    let cur_route = String.concat ~sep:", " (List.map cur_list ~f:(fun airport -> Airport.(airport.name) ^ " (" ^ airport.code ^ ")")) in
+
+    let%bind choice = (Fzf.pick_one airports_fuzzy_list ~case_match:`case_insensitive ~header:("Choose destination airports (ESC to quit)\nOrigin" ^ "ADD ORIGIN" ^ "Current Route: " ^ cur_route) >>| ok_exn) in 
     match choice with
     | Some airport -> (
-      let new_list = airport :: cur_list in
+      let new_list = cur_list @ [airport] in
       return (`Repeat new_list)
     )
     | None -> (
@@ -89,7 +90,7 @@ let run () =
   match flying with
   | "Yes" ->
     let optimize_options_list = ["time" ; "price"] in 
-    let%bind desired_optimization = fzf_choose_between ~options_list:optimize_options_list ~message:"How should we optimize your flights?" in
+    let%bind _desired_optimization = fzf_choose_between ~options_list:optimize_options_list ~message:"How should we optimize your flights?" in
 
     let%bind _departure_date = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "What day would you like to leave (Enter in YYYYMMDD)" in
     let%bind _stay_length = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "How many days would you like to stay in each city?" in
@@ -103,11 +104,11 @@ let run () =
 
     (* let area_codes = List.map cities ~f:(fun location -> location.code) in *)
     let all_places = [airport_origin_address] @ cities in
-    let sorted_city_list = List.dedup_and_sort all_places ~compare:Airport.compare in
+    let _sorted_city_list = List.dedup_and_sort all_places ~compare:Airport.compare in
     print_endline "Searching for travel Info...";
-    let date = Date.of_string "20001212" in
+    let _date = Date.of_string "20001212" in
 
-
+(*  UNCOMMENT FOR ACTUAL RESULTS
     print_endline "Computing Optimal Route...";
     let%map optimal_route = 
     (match desired_optimization with 
@@ -123,9 +124,9 @@ let run () =
       | _ -> assert false) in
 
     print_s [%sexp (optimal_route: Airport.t list)];
+ *)
 
-
-    ()
+    return ()
     (* List.iter dis *)
 
 
