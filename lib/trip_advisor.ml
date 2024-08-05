@@ -74,8 +74,6 @@ let find_destination_airports origin_str =
   (* return () *)
 ;;
 
-let 
-
 let run () = 
   (* let date = Date.of_string "2024-09-18" in
   let%bind price = Plane.plane_api ~city_code_origin:"SFO" ~city_code_destination:"NYC" ~date ~desired_info:"price" in
@@ -165,7 +163,6 @@ let run () =
     let%bind distance_data = Tsp.Intra_city_duration.make_destination_graph (List.dedup_and_sort all_places ~compare:Location.compare) travel_method in
     
     print_endline "Computing Optimal Route...";
-
     
     if num_days = 1 then 
       let best = Tsp.Intra_city_duration.get_shortest_path ~origin:location_origin_address ~dest_list:location_places_list ~path_map:distance_data in
@@ -177,7 +174,7 @@ let run () =
         let best = Tsp.Intra_city_duration.get_shortest_path ~origin:location_origin_address ~dest_list:cluster ~path_map:distance_data in
         print_optimal_google_route ~day:(idx + 1) ~best_route:(fst best) ~travel_method;
       ) in
-    return ()
+      return ()
   | _ -> assert false
 ;;
 
