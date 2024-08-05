@@ -42,7 +42,7 @@ let call_api address =
 ;;
 
 let parse_kayak_for_prices js_file ~optimization = 
-  ignore optimization;
+
   let open Soup in
   let script = List.hd_exn (parse js_file
   $$ "script[id=__R9_HYDRATE_DATA__][type=application/json]"
