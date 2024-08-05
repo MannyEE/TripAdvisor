@@ -79,10 +79,10 @@ let find_destination_airports origin_str =
 
 let run () = 
   (* let date = Date.of_string "2024-09-18" in
-  let%bind price = Plane.plane_api ~city_code_origin:"SFO" ~city_code_destination:"NYC" ~date ~desired_info:"price" in
+  let%bind _price = Plane.plane_api ~origin_city_code:"SFO" ~destination_city_code:"NYC" ~date ~optimization:"price" in
   print_int price; *)
-
-  (* let%bind flying = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Do you plan on flying to your destinations" in *)
+(* 
+  let%bind flying = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Do you plan on flying to your destinations" in *)
 
   let flying_options_list = [ "No" ; "Yes"] in
   let%bind flying = fzf_choose_between ~options_list:flying_options_list ~message:"Do you plan on flying to your destinations" in

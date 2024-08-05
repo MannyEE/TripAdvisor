@@ -123,7 +123,6 @@ let make_destination_graph (places_list : Node.t list) additional_arg=
       match [%compare.equal:Node.t] origin_city_code destination_city_code with 
       | true -> return ()
       | false -> 
-        (* let%bind distance = Plane.plane_api_price ~city_code_origin ~city_code_destination ~date ~desired_optimization in *)
         let%bind weight = Arg.compute_weight origin_city_code destination_city_code additional_arg in
         Hashtbl.add_exn (empty_tbl) ~key:destination_city_code ~data:weight;
         return()
