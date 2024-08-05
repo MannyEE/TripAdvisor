@@ -42,6 +42,7 @@ let call_api address =
 ;;
 
 let parse_kayak_for_prices js_file ~optimization = 
+  ignore optimization;
   let open Soup in
   let script = List.hd_exn (parse js_file
   $$ "script[id=__R9_HYDRATE_DATA__][type=application/json]"
@@ -49,20 +50,41 @@ let parse_kayak_for_prices js_file ~optimization =
   |> List.map ~f:(fun li -> texts li |> String.concat ~sep:"" |> String.strip)) in
 
   let script_json = Jsonaf.of_string script in
-  let price_str = Jsonaf.member_exn "serverData" script_json |> Jsonaf.member_exn "FlightResultsList" |> Jsonaf.member_exn "sortData" |> Jsonaf.member_exn "bestflight_a" |> Jsonaf.member_exn optimization |> Jsonaf.to_string in
+
+    (* print_s [%sexp (script_json : Jsonaf.t)]; *)
+
+
+  let price_str = Jsonaf.member_exn "serverData" script_json 
+  |> Jsonaf.member_exn "FlightResultsList" 
+  |> Jsonaf.member_exn "sortData" 
+  |> Jsonaf.member_exn "bestflight_a" 
+  |> Jsonaf.member_exn optimization 
+  |> Jsonaf.to_string in
+
+  (* print_endline price_str; *)
 
   let price = Int.of_string (String.strip price_str ~drop:(fun char -> 
     Char.equal char '"' || Char.equal char '$')) in
 
   price
+
+
   ;;
 
 let plane_api ~origin_city_code ~destination_city_code ~date ~(optimization : string) = 
-  ignore optimization;
   let date_string = (Int.to_string (Date.year date)) ^ "-" ^ (zfill (Int.to_string (Month.to_int (Date.month date))) 2) ^ "-" ^ (Int.to_string (Date.day date)) in
-  let _kayak_address = config_kayak_address ~origin_city_code ~destination_city_code date_string in
-  (* let%bind kayak_json = call_api kayak_address in *)
-  let%bind kayak_json =  Reader.file_contents "kayak" in
+  let kayak_address = config_kayak_address ~origin_city_code ~destination_city_code date_string in
+  let%bind kayak_json = call_api kayak_address in
+  (* let%bind kayak_json =  Reader.file_contents "kayak" in *)
+  (* try *)
   let price = parse_kayak_for_prices kayak_json ~optimization in
   return price
+(* 
+  with 
+  | error ->
+    print_s [%sexp (error : exn)];
+     print_endline origin_city_code;
+     print_endline destination_city_code;
+     return 2 *)
+
 ;;
