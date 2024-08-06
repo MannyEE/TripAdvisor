@@ -16,7 +16,6 @@ let rec get_desired_places ((): unit) =
 let print_optimal_google_route ~(day : int) ~(best_route) ~travel_method =
   print_string ("Day " ^ (Int.to_string day) ^ ": ");
   Google_api.print_maps_address ~directions:(best_route) ~travel_method;
-  return ()
 ;;
 
 
@@ -74,7 +73,58 @@ let find_destination_airports origin_str =
   (* return () *)
 ;;
 
-let 
+let intercity_optimization () = 
+  let%bind string_origin_address = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter origin location" in
+  let%bind location_origin_address = Google_api.get_location string_origin_address in
+
+  print_endline "What places would you like to visit? Put in one address at a time";
+  let%bind string_places_list = get_desired_places () in
+  let%bind location_places_list = Deferred.List.map string_places_list ~how:`Sequential ~f:(fun place ->
+    Google_api.get_location place
+  ) in
+
+  let%bind num_days = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "How many days are you traveling?" in
+  let num_days = Int.of_string num_days in
+
+  let travel_method_list = ["driving" ; "walking" ; "bicycling" ; "transit"] in
+  let travel_method_list = Fzf.Pick_from.Inputs travel_method_list in
+  let%bind travel_method =
+  (Deferred.repeat_until_finished () (fun () ->
+    let%bind choice = (Fzf.pick_one travel_method_list ~header:"Enter travel method" >>| ok_exn) in 
+    match choice with
+    | Some string -> return (`Finished string)
+    | None -> return (`Repeat ())
+    ))
+  in
+  let all_places = [location_origin_address] @ location_places_list in
+    
+    print_endline "Searching Google Maps for travel times...";
+    let%bind distance_data = Tsp.Intra_city_duration.make_destination_graph (List.dedup_and_sort all_places ~compare:Location.compare) travel_method in
+    
+    print_endline "Computing Optimal Route...";
+    
+    let%bind best = 
+      (match num_days with
+      | 1 -> 
+        let best_route = Tsp.Intra_city_duration.get_shortest_path ~origin:location_origin_address ~dest_list:location_places_list ~path_map:distance_data in
+        return [best_route]
+      | _ ->
+        let clusters = Cluster.k_means_clustering ~k:num_days ~points:location_places_list in 
+        let%bind best_routes = Deferred.List.map ~how:`Sequential clusters ~f:(fun cluster -> return (Tsp.Intra_city_duration.get_shortest_path ~origin:location_origin_address ~dest_list:cluster ~path_map:distance_data)) in
+        return best_routes) in
+
+
+    let () = List.iteri best ~f:(fun idx route->
+        print_optimal_google_route ~day:(idx + 1) ~best_route:(fst route) ~travel_method) in
+
+    return ()
+
+    
+
+
+
+    
+;;
 
 let run () = 
   (* let date = Date.of_string "2024-09-18" in
@@ -121,63 +171,32 @@ let run () =
       | _ -> assert false) in
 
     print_s [%sexp (optimal_route: Airport.t list)];
+    let kayak_route_link = Plane.get_kayak_link optimal_route departure_date in
 
-    let%bind flying = fzf_choose_between ~options_list:flying_options_list ~message:"Would you like to optimize your daily trips in each city as well?" in
+    print_endline kayak_route_link;
+    let%bind optimize_cities = fzf_choose_between ~options_list:flying_options_list ~message:"Would you like to optimize your daily trips in each city as well?" in
 
-    print_endline flying;
-
-    return ()
-
-
-
-    
-
-
-    (* List.iter dis *)
-
-  | "No" ->
+    let%bind () =
+      match optimize_cities with
+      | "Yes"-> 
+        Deferred.List.iter optimal_route ~how:`Sequential ~f:(fun city ->
+          let () = print_endline ("Optimize your trip in: " ^ (city.name)) in
+          let%bind () = intercity_optimization () in
+          return ()
+        ) 
   
-    let%bind string_origin_address = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter origin location" in
-    let%bind location_origin_address = Google_api.get_location string_origin_address in
+  
+      | "No"-> 
+        return ()
+      | _ -> assert false
+      in
 
-    print_endline "What places would you like to visit? Put in one address at a time";
-    let%bind string_places_list = get_desired_places () in
-    let%bind location_places_list = Deferred.List.map string_places_list ~how:`Sequential ~f:(fun place ->
-      Google_api.get_location place
-    ) in
 
-    let%bind num_days = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "How many days are you traveling?" in
-    let num_days = Int.of_string num_days in
-
-  let travel_method_list = ["driving" ; "walking" ; "bicycling" ; "transit"] in
-  let travel_method_list = Fzf.Pick_from.Inputs travel_method_list in
-  let%bind travel_method =
-  (Deferred.repeat_until_finished () (fun () ->
-    let%bind choice = (Fzf.pick_one travel_method_list ~header:"Enter travel method" >>| ok_exn) in 
-    match choice with
-    | Some string -> return (`Finished string)
-    | None -> return (`Repeat ())
-    ))
-  in
-  let all_places = [location_origin_address] @ location_places_list in
-    
-    print_endline "Searching Google Maps for travel times...";
-    let%bind distance_data = Tsp.Intra_city_duration.make_destination_graph (List.dedup_and_sort all_places ~compare:Location.compare) travel_method in
-    
-    print_endline "Computing Optimal Route...";
-
-    
-    if num_days = 1 then 
-      let best = Tsp.Intra_city_duration.get_shortest_path ~origin:location_origin_address ~dest_list:location_places_list ~path_map:distance_data in
-      let%bind () = print_optimal_google_route ~day:1 ~best_route:(fst best) ~travel_method in
-      return ()
-    else 
-      let clusters = Cluster.k_means_clustering ~k:num_days ~points:location_places_list in 
-      let%bind () = Deferred.List.iteri ~how:`Sequential clusters ~f:(fun idx cluster ->
-        let best = Tsp.Intra_city_duration.get_shortest_path ~origin:location_origin_address ~dest_list:cluster ~path_map:distance_data in
-        print_optimal_google_route ~day:(idx + 1) ~best_route:(fst best) ~travel_method;
-      ) in
     return ()
+
+
+
+  | "No" -> intercity_optimization ()
   | _ -> assert false
 ;;
 

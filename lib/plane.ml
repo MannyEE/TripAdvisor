@@ -35,16 +35,12 @@ let config_kayak_address ~origin_city_code ~destination_city_code date =
 ;;
 
 let call_api address =
-  Client.get ~headers:(create_kayak_header ()) (Uri.of_string (address)) >>= fun (resp, body) ->
-    print_s [%sexp (resp :Response.t)];
+  Client.get ~headers:(create_kayak_header ()) (Uri.of_string (address)) >>= fun (_resp, body) ->
   let%bind body = Body.to_string body in
-  print_endline body;
   return body
 ;;
 
 let parse_kayak_for_prices js_file ~optimization = 
-
-  print_endline js_file;
 
   let open Soup in
   let script = List.hd_exn (parse js_file
@@ -79,12 +75,25 @@ let plane_api ~origin_city_code ~destination_city_code ~date ~(optimization : st
   ignore optimization;
   let date_string = (Int.to_string (Date.year date)) ^ "-" ^ (zfill (Int.to_string (Month.to_int (Date.month date))) 2) ^ "-" ^ (Int.to_string (Date.day date)) in
   let kayak_address = config_kayak_address ~origin_city_code ~destination_city_code date_string in
-  let%bind kayak_json = call_api kayak_address in
+  let%bind _kayak_json = call_api kayak_address in
 
-  print_endline kayak_json;
   (* let%bind kayak_json =  Reader.file_contents "kayak" in
   let price = parse_kayak_for_prices kayak_json ~optimization in
   return price *)
   return 2
 
 ;;
+
+let get_kayak_link (best_route : Airport.t list) (departure_date : Date.t) = 
+  fst (List.foldi best_route ~init:("https://www.kayak.com/flights/", departure_date) ~f:(fun idx (link, departure_date) airport -> 
+    match (Int.equal idx 0) with 
+    | true -> 
+      (link ^ airport.code ^ "-", Date.add_days departure_date 2)
+    | false ->
+      let date_string = (Int.to_string (Date.year departure_date)) ^ "-" ^ (zfill (Int.to_string (Month.to_int (Date.month departure_date))) 2) ^ "-" ^ (Int.to_string (Date.day departure_date)) in
+      (link ^ airport.code ^ "/" ^ date_string ^ "/" ^ airport.code ^ "-", Date.add_days departure_date 2)))
+^ "?sort=bestflight_a"
+
+  
+    
+
