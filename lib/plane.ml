@@ -37,10 +37,13 @@ let config_kayak_address ~origin_city_code ~destination_city_code date =
 let call_api address =
   Client.get ~headers:(create_kayak_header ()) (Uri.of_string (address)) >>= fun (_resp, body) ->
   let%bind body = Body.to_string body in
+  print_endline body;
   return body
 ;;
 
 let parse_kayak_for_prices js_file ~optimization = 
+
+  print_endline js_file;
 
   let open Soup in
   let script = List.hd_exn (parse js_file
