@@ -13,8 +13,10 @@ let rec get_desired_places ((): unit) =
       input :: places_list
 ;;
 
-let print_optimal_google_route ~(day : int) ~(best_route) ~travel_method =
-  print_string ("Day " ^ (Int.to_string day) ^ ": ");
+
+let print_optimal_google_route ~(day : int) ~(best_route : Location.t list) ~travel_method =
+  print_endline ("Day " ^ (Int.to_string day) ^ ": ");
+  print_endline (String.concat ~sep:" -> " (List.map best_route ~f:(fun location -> location.name)));
   Google_api.print_maps_address ~directions:(best_route) ~travel_method;
 ;;
 
@@ -141,8 +143,15 @@ let run () =
     let optimize_options_list = ["time" ; "price"] in 
     let%bind desired_optimization = fzf_choose_between ~options_list:optimize_options_list ~message:"How should we optimize your flights?" in
 
-    let%bind departure_date = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "What day would you like to leave (Enter in YYYYMMDD)" >>| Date.of_string in
-    (* let%bind _stay_length = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "How many days would you like to stay in each city?" in *)
+    (* let%bind departure_date = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "What day would you like to leave (Enter in YYYYMMDD)" >>| Date.of_string in *)
+    let%bind date_list = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "What day would you like to leave (Enter in MM/DD/YYYY)" >>| 
+    String.split ~on:'/' in
+    
+    let departure_date = 
+    Date.of_string ((List.nth_exn date_list 2) ^ (List.nth_exn date_list 0) ^ (List.nth_exn date_list 1)) in
+
+    (* DONT WE WANT THIS FOR FLIGHT DATES?*)
+    let%bind stay_length = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "How many days would you like to stay in each city?" >>| Int.of_string in
     let%bind airport_origin_address = find_origin_airport () in
     (* print_s [%message (airport_origin_address : Airport.t)]; *)
 
@@ -170,10 +179,14 @@ let run () =
         fst best
       | _ -> assert false) in
 
-    print_s [%sexp (optimal_route: Airport.t list)];
-    let kayak_route_link = Plane.get_kayak_link optimal_route departure_date in
+    (* print_s [%sexp (optimal_route: Airport.t list)]; *)
+    print_string "\nFlight path: ";
+    print_endline ((String.concat ~sep:" -> " (List.map optimal_route ~f:(fun location -> location.name))) ^ "\n");
+
+    let kayak_route_link = Plane.get_kayak_link ~best_route:optimal_route ~departure_date ~stay_length in
 
     print_endline kayak_route_link;
+    print_newline ();
     let%bind optimize_cities = fzf_choose_between ~options_list:flying_options_list ~message:"Would you like to optimize your daily trips in each city as well?" in
 
     let%bind () =
@@ -194,7 +207,7 @@ let run () =
 
     return ()
 
-
+    
 
   | "No" -> intercity_optimization ()
   | _ -> assert false
