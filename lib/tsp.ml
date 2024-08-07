@@ -160,10 +160,7 @@ module Flight_duration = Make_tsp (struct
   let compute_weight (origin_airport : Airport.t) (destination_airport : Airport.t) (date : Date.t) : Weight.t Deferred.t = 
     let origin_city_code = origin_airport.code in 
     let destination_city_code = destination_airport.code in 
-     let%bind time = Plane.plane_api ~origin_city_code ~destination_city_code ~date ~optimization:"duration" in
-     let%bind price = Plane.plane_api ~origin_city_code ~destination_city_code ~date ~optimization:"price" in
-     let data = Kayak_data.{price = price; duration = Time_ns.Span.of_int_min time} in
-     return data
+     Plane.plane_api ~origin_city_code ~destination_city_code ~date
   end)
 
 module Flight_prices = Make_tsp (struct 
@@ -174,9 +171,9 @@ module Flight_prices = Make_tsp (struct
   let compute_weight (origin_airport : Airport.t) (destination_airport : Airport.t) (date : Date.t) : Weight.t Deferred.t = 
     let origin_city_code = origin_airport.code in 
     let destination_city_code = destination_airport.code in 
-     let%bind time = Plane.plane_api ~origin_city_code ~destination_city_code ~date ~optimization:"duration" in
-     let%bind price = Plane.plane_api ~origin_city_code ~destination_city_code ~date ~optimization:"price" in
-     let data = Kayak_data.{price = price; duration = Time_ns.Span.of_int_min time} in
-     return data
+    Plane.plane_api ~origin_city_code ~destination_city_code ~date 
+     
   end)
 
+
+  
