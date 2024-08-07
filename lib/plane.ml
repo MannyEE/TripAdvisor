@@ -41,9 +41,7 @@ let call_api address =
   return body
 ;;
 
-let parse_kayak_for_prices js_file ~optimization = 
-
-  print_endline js_file;
+let parse_kayak js_file ~optimization = 
 
   let open Soup in
   let script = List.hd_exn (parse js_file
@@ -56,7 +54,7 @@ let parse_kayak_for_prices js_file ~optimization =
     (* print_s [%sexp (script_json : Jsonaf.t)]; *)
 
 
-  let price_str = Jsonaf.member_exn "serverData" script_json 
+  let value_str = Jsonaf.member_exn "serverData" script_json 
   |> Jsonaf.member_exn "FlightResultsList" 
   |> Jsonaf.member_exn "sortData" 
   |> Jsonaf.member_exn "bestflight_a" 
@@ -65,11 +63,23 @@ let parse_kayak_for_prices js_file ~optimization =
 
   (* print_endline price_str; *)
 
-  let price = Int.of_string (String.strip price_str ~drop:(fun char -> 
-    Char.equal char '"' || Char.equal char '$')) in
+  let value = 
+  match optimization with 
+  | "price" -> 
+    Int.of_string (String.strip value_str ~drop:(fun char -> 
+    Char.equal char '"' || Char.equal char '$'))
 
-  price
+  | "duration" -> 
+    let num_list = String.split ~on:' ' value_str
+    |> List.map ~f:(fun num -> 
+      String.filter num ~f:Char.is_digit) in
+    
+    Int.of_string (List.hd_exn num_list) * 60 + Int.of_string (List.last_exn num_list)
 
+  
+  | _ -> assert false in
+
+  value
 
   ;;
 
@@ -77,13 +87,13 @@ let plane_api ~origin_city_code ~destination_city_code ~date ~(optimization : st
 
   ignore optimization;
   let date_string = (Int.to_string (Date.year date)) ^ "-" ^ (zfill (Int.to_string (Month.to_int (Date.month date))) 2) ^ "-" ^ (Int.to_string (Date.day date)) in
-  let kayak_address = config_kayak_address ~origin_city_code ~destination_city_code date_string in
-  let%bind _kayak_json = call_api kayak_address in
+  let _kayak_address = config_kayak_address ~origin_city_code ~destination_city_code date_string in
+  (* let%bind _kayak_json = call_api kayak_address in *)
 
-  (* let%bind kayak_json =  Reader.file_contents "kayak" in
-  let price = parse_kayak_for_prices kayak_json ~optimization in
-  return price *)
-  return 2
+  let%bind kayak_json =  Reader.file_contents "kayak" in
+  let price = parse_kayak kayak_json ~optimization in
+  return price
+  (* return 2 *)
 
 ;;
 

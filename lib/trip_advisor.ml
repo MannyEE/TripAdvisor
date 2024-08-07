@@ -73,7 +73,7 @@ let find_destination_airports origin_str =
   (* return () *)
 ;;
 
-let intercity_optimization () = 
+let intracity_optimization map = 
   let%bind string_origin_address = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter origin location" in
   let%bind location_origin_address = Google_api.get_location string_origin_address in
 
@@ -99,7 +99,7 @@ let intercity_optimization () =
   let all_places = [location_origin_address] @ location_places_list in
     
     print_endline "Searching Google Maps for travel times...";
-    let%bind distance_data = Tsp.Intra_city_duration.make_destination_graph (List.dedup_and_sort all_places ~compare:Location.compare) travel_method in
+    let%bind distance_data = Tsp.Intra_city_duration.make_destination_graph map (List.dedup_and_sort all_places ~compare:Location.compare) travel_method in
     
     print_endline "Computing Optimal Route...";
     
@@ -155,19 +155,29 @@ let run () =
     print_endline "Searching for travel Info...";
 
  (* UNCOMMENT FOR ACTUAL RESULTS *)
+
+    let filename = "dataaa" in
+    let%bind map_option = Reader.load_sexp filename [%of_sexp : Kayak_data.t Airport.Table.t Airport.Table.t] in
+    let map = 
+    match map_option with 
+    | Ok map -> map 
+    | Error _-> Airport.Table.create () in
+
     let%bind optimal_route = 
     (match desired_optimization with 
       | "time" -> 
-        let%map (distance_data) = Tsp.Flight_duration.make_destination_graph (sorted_city_list) departure_date in
+        let%bind (distance_data) = Tsp.Flight_duration.make_destination_graph map (sorted_city_list) departure_date in
+        let%bind () = Writer.save_sexp filename [%sexp (distance_data : Kayak_data.t Airport.Table.t Airport.Table.t)] in
         print_endline "Computing Optimal Route...";
         let best = Tsp.Flight_duration.get_shortest_path ~origin:airport_origin_address ~dest_list:cities ~path_map:distance_data in
-        fst best
+        return (fst best)
         
       | "price" ->
-        let%map (distance_data) = Tsp.Flight_prices.make_destination_graph (sorted_city_list) departure_date in
+        let%bind (distance_data) = Tsp.Flight_prices.make_destination_graph map (sorted_city_list) departure_date in
+        let%bind () = Writer.save_sexp filename [%sexp (distance_data : Kayak_data.t Airport.Table.t Airport.Table.t)] in
         print_endline "Computing Optimal Route...";
         let best = Tsp.Flight_prices.get_shortest_path ~origin:airport_origin_address ~dest_list:cities ~path_map:distance_data in
-        fst best
+        return (fst best)
       | _ -> assert false) in
 
     print_s [%sexp (optimal_route: Airport.t list)];
@@ -181,22 +191,20 @@ let run () =
       | "Yes"-> 
         Deferred.List.iter optimal_route ~how:`Sequential ~f:(fun city ->
           let () = print_endline ("Optimize your trip in: " ^ (city.name)) in
-          let%bind () = intercity_optimization () in
+          let map = Location.Table.create () in
+          let%bind () = intracity_optimization map in
           return ()
         ) 
-  
-  
       | "No"-> 
         return ()
       | _ -> assert false
       in
 
-
     return ()
 
-
-
-  | "No" -> intercity_optimization ()
+  | "No" ->
+    let map = Location.Table.create () in
+    intracity_optimization map
   | _ -> assert false
 ;;
 
