@@ -198,16 +198,12 @@ let run () =
           return ()
         ) 
   
-  
       | "No"-> 
         return ()
       | _ -> assert false
       in
 
-
     return ()
-
-    
 
   | "No" -> intercity_optimization ()
   | _ -> assert false

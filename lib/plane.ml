@@ -88,13 +88,9 @@ let plane_api ~origin_city_code ~destination_city_code ~date ~(optimization : st
 ;;
 
 let get_kayak_link ~(best_route : Airport.t list) ~(departure_date : Date.t) ~stay_length = 
-  (* fst (List.foldi best_route ~init:("https://www.kayak.com/flights/", departure_date) ~f:(fun idx (link, departure_date) airport -> 
-    match (Int.equal idx 0) with 
-    | true -> 
-      (link ^ airport.code ^ "-", Date.add_days departure_date 2)
-    | false ->
-      let date_string = (Int.to_string (Date.year departure_date)) ^ "-" ^ (zfill (Int.to_string (Month.to_int (Date.month departure_date))) 2) ^ "-" ^ (Int.to_string (Date.day departure_date)) in
-      (link ^ airport.code ^ "/" ^ date_string ^ "/" ^ airport.code ^ "-", Date.add_days departure_date 2))) *)
+  
+  (* FIX THIS ONCE WE ADD END OF ROUTE TO TSP/best_route *)
+
   let route_len = List.length best_route in
   fst (List.foldi best_route ~init:("https://www.kayak.com/flights/", departure_date) ~f:(fun idx (link, departure_date) cur_airport -> 
     let next_idx = (idx + 1) % route_len in
