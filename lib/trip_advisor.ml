@@ -78,6 +78,7 @@ let find_destination_airports origin_str =
 let intracity_optimization map = 
   let%bind string_origin_address = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter origin location" in
   let%bind location_origin_address = Google_api.get_location string_origin_address in
+  (* print_s [%message (location_origin_address.coordinates : Location.Coordinates.t)]; *)
 
   print_endline "What places would you like to visit? Put in one address at a time";
   let%bind string_places_list = get_desired_places () in
