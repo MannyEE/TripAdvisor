@@ -80,10 +80,10 @@ let parse_kayak js_file =
 let plane_api ~origin_city_code ~destination_city_code ~date = 
 
   let date_string = (Int.to_string (Date.year date)) ^ "-" ^ (zfill (Int.to_string (Month.to_int (Date.month date))) 2) ^ "-" ^ (Int.to_string (Date.day date)) in
-  let _kayak_address = config_kayak_address ~origin_city_code ~destination_city_code date_string in
-  (* let%bind kayak_json = call_api kayak_address in *)
+  let kayak_address = config_kayak_address ~origin_city_code ~destination_city_code date_string in
+  let%bind kayak_json = call_api kayak_address in
 
-  let%bind kayak_json =  Reader.file_contents "kayak" in
+  (* let%bind kayak_json =  Reader.file_contents "kayak" in *)
   let price = parse_kayak kayak_json in
   return price
   (* return 2 *)
