@@ -7,6 +7,7 @@ module type S = sig
   type node
   type additional_weight_arg
   val make_destination_graph :
+    (node, (node, weight) Hashtbl.t) Hashtbl.t ->
     node list ->
     additional_weight_arg ->
     (node, (node, weight) Hashtbl.t) Hashtbl.t Deferred.t
@@ -22,7 +23,7 @@ end
 module type Arg = sig 
   module Weight: sig
     type t
-    include Comparable.S with type t := t
+    val (<) : t -> t -> bool
     val zero : t
     val (+) : t -> t -> t
   end
@@ -54,7 +55,14 @@ module Make_tsp (Arg : Arg) : S with type weight = Arg.Weight.t and type node = 
 
 
 let rec small_input_search ~cur_path ~cur_time ~(dest_set : Node.Set.t) ~(path_map : Weight.t Node.Table.t Node.Table.t) = 
-  if Set.is_empty dest_set then (cur_path, cur_time) else 
+  if Set.is_empty dest_set then (
+    let last_loc = List.last_exn cur_path in
+    let first_loc = List.hd_exn cur_path in
+    let final_path = cur_path @ [first_loc] in
+    let edge_map = Hashtbl.find_exn path_map last_loc in
+    let final_time = Hashtbl.find_exn edge_map first_loc in
+    (final_path, final_time) 
+  ) else 
     Set.fold ~init:(cur_path, None) dest_set ~f:(fun (best_path, shortest_time) dest -> 
       let origin = List.last_exn cur_path in
       let edge_map = Hashtbl.find_exn path_map origin in
@@ -114,21 +122,27 @@ let get_shortest_path ~origin ~(dest_list : Node.t list) ~(path_map : Weight.t N
 ;;
 
 
-let make_destination_graph (places_list : Node.t list) additional_arg= 
-  let map = Node.Table.create () in
-  let%bind () = Deferred.List.iter ~how:`Parallel places_list ~f:(fun origin_city_code -> 
-    let empty_tbl = Hashtbl.find_or_add map origin_city_code ~default:Node.Table.create in
+let make_destination_graph data_map (places_list : Node.t list) additional_arg = 
 
+  let%bind () = Deferred.List.iter ~how:`Parallel places_list ~f:(fun origin_city_code -> 
+
+    let destination_table = Hashtbl.find_or_add data_map origin_city_code ~default:Node.Table.create in
     Deferred.List.iter ~how:`Parallel places_list ~f:(fun destination_city_code ->
       match [%compare.equal:Node.t] origin_city_code destination_city_code with 
       | true -> return ()
       | false -> 
-        let%bind weight = Arg.compute_weight origin_city_code destination_city_code additional_arg in
-        Hashtbl.add_exn (empty_tbl) ~key:destination_city_code ~data:weight;
-        return()
+        let cur_data = Hashtbl.find destination_table destination_city_code in
+        match cur_data with 
+        | None ->   
+          let%bind data = Arg.compute_weight origin_city_code destination_city_code additional_arg in
+          Hashtbl.add_exn ~key:destination_city_code ~data destination_table;
+          return ()
+        | Some _ ->
+          return()
     ) 
   ) in
-  return map
+
+  return data_map
 ;;
 
 
@@ -146,25 +160,30 @@ module Intra_city_duration = Make_tsp (struct
   end)
 
 module Flight_duration = Make_tsp (struct 
-  module Weight = Time_ns.Span
+  module Weight = Kayak_data.Comparing_duration
   module Node = Airport
   module Additional_weight_arg = Date
 
   let compute_weight (origin_airport : Airport.t) (destination_airport : Airport.t) (date : Date.t) : Weight.t Deferred.t = 
     let origin_city_code = origin_airport.code in 
     let destination_city_code = destination_airport.code in 
-     let%map time = Plane.plane_api ~origin_city_code ~destination_city_code ~date ~optimization:"duration" in
-     Time_ns.Span.of_int_sec time
+     let%bind time = Plane.plane_api ~origin_city_code ~destination_city_code ~date ~optimization:"duration" in
+     let%bind price = Plane.plane_api ~origin_city_code ~destination_city_code ~date ~optimization:"price" in
+     let data = Kayak_data.{price = price; duration = Time_ns.Span.of_int_min time} in
+     return data
   end)
 
 module Flight_prices = Make_tsp (struct 
-  module Weight = Int
+  module Weight = Kayak_data.Comparing_price
   module Node = Airport
   module Additional_weight_arg = Date
 
-    let compute_weight (origin_airport : Airport.t) (destination_airport : Airport.t) (date : Date.t) : Weight.t Deferred.t = 
-      let origin_city_code = origin_airport.code in 
-      let destination_city_code = destination_airport.code in 
-      Plane.plane_api ~origin_city_code ~destination_city_code ~date ~optimization:"price"
+  let compute_weight (origin_airport : Airport.t) (destination_airport : Airport.t) (date : Date.t) : Weight.t Deferred.t = 
+    let origin_city_code = origin_airport.code in 
+    let destination_city_code = destination_airport.code in 
+     let%bind time = Plane.plane_api ~origin_city_code ~destination_city_code ~date ~optimization:"duration" in
+     let%bind price = Plane.plane_api ~origin_city_code ~destination_city_code ~date ~optimization:"price" in
+     let data = Kayak_data.{price = price; duration = Time_ns.Span.of_int_min time} in
+     return data
   end)
 
