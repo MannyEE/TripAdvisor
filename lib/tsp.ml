@@ -55,7 +55,14 @@ module Make_tsp (Arg : Arg) : S with type weight = Arg.Weight.t and type node = 
 
 
 let rec small_input_search ~cur_path ~cur_time ~(dest_set : Node.Set.t) ~(path_map : Weight.t Node.Table.t Node.Table.t) = 
-  if Set.is_empty dest_set then (cur_path, cur_time) else 
+  if Set.is_empty dest_set then (
+    let last_loc = List.last_exn cur_path in
+    let first_loc = List.hd_exn cur_path in
+    let final_path = cur_path @ [first_loc] in
+    let edge_map = Hashtbl.find_exn path_map last_loc in
+    let final_time = Hashtbl.find_exn edge_map first_loc in
+    (final_path, final_time) 
+  ) else 
     Set.fold ~init:(cur_path, None) dest_set ~f:(fun (best_path, shortest_time) dest -> 
       let origin = List.last_exn cur_path in
       let edge_map = Hashtbl.find_exn path_map origin in

@@ -36,7 +36,7 @@ let call_api ~configured_address =
   return (Jsonaf.of_string body)
 ;;
 
-
+Time_ns.Span.of_string
 let get_place_id geocode_json : string = 
 
   try 
@@ -111,6 +111,7 @@ let print_maps_address ~(directions : Location.t list) ~travel_method =
     let%map json_str = geocode str in
     get_formatted_address json_str
   ) in *)
+   (* FIX THIS ONCE WE ADD END OF ROUTE TO TSP *)
   let travel_method = "&travelmode=" ^ travel_method in
   let initial_address = "https://www.google.com/maps/dir/?api=1" in
   let formatted_directions = List.map directions ~f:(fun loc -> String.map loc.name ~f:(fun ch -> match ch with ' ' -> '+' | _ -> ch)) in
@@ -121,4 +122,4 @@ let print_maps_address ~(directions : Location.t list) ~travel_method =
   print_endline (List.fold formatted_directions ~init:(starting_address ^ "&waypoints=") ~f:(fun accum_str str -> 
   accum_str ^ str ^ "%7C"
   ));
-;;
+;; 
