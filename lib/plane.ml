@@ -101,10 +101,11 @@ let get_kayak_link ~(best_route : Airport.t list) ~(departure_date : Date.t) ~st
 
   let route_len = List.length best_route in
   fst (List.foldi best_route ~init:("https://www.kayak.com/flights/", departure_date) ~f:(fun idx (link, departure_date) cur_airport -> 
+    if idx = (route_len - 1) then link ^ "?sort=bestflight_a", departure_date else
     let next_idx = (idx + 1) % route_len in
     let next_airport = List.nth_exn best_route next_idx in
     let date_string = (Int.to_string (Date.year departure_date)) ^ "-" ^ (zfill (Int.to_string (Month.to_int (Date.month departure_date))) 2) ^ "-" ^ (zfill (Int.to_string (Date.day departure_date)) 2) in
     (link ^ cur_airport.code ^ "-" ^ next_airport.code ^ "/" ^ date_string ^ "/", Date.add_days departure_date stay_length)
-    )) ^ "?sort=bestflight_a"
+    ))
   ;;
 
