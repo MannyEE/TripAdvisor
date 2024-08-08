@@ -84,8 +84,13 @@ let plane_api ~origin_city_code ~destination_city_code ~date =
   let%bind kayak_json = call_api kayak_address in
 
   (* let%bind kayak_json =  Reader.file_contents "kayak" in *)
-  let price = parse_kayak kayak_json in
-  return price
+  try
+    let price = parse_kayak kayak_json in
+    return price
+
+  with _ ->
+    print_s[%message (origin_city_code ^ " " ^ destination_city_code: string)];
+    return Kayak_data.large
   (* return 2 *)
 
 ;;

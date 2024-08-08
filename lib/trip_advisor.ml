@@ -129,6 +129,13 @@ let intracity_optimization map =
     
 ;;
 
+let filter_map map = 
+
+  Hashtbl.iter map ~f:(fun inner_tbl ->
+    Hashtbl.filter_inplace inner_tbl ~f:(fun data -> not (Kayak_data.is_large data)))
+  ;;
+
+
 let run () = 
   (* let date = Date.of_string "2024-09-18" in
   let%bind price = Plane.plane_api ~city_code_origin:"SFO" ~city_code_destination:"NYC" ~date ~desired_info:"price" in
@@ -173,22 +180,23 @@ let run () =
     | Ok map -> map 
     | Error _-> Airport.Table.create () in
 
+    let%bind (distance_data) = Tsp.Flight_duration.make_destination_graph map (sorted_city_list) departure_date in
+
     let%bind optimal_route = 
     (match desired_optimization with 
       | "time" -> 
-        let%bind (distance_data) = Tsp.Flight_duration.make_destination_graph map (sorted_city_list) departure_date in
-        let%bind () = Writer.save_sexp filename [%sexp (distance_data : Kayak_data.t Airport.Table.t Airport.Table.t)] in
         print_endline "Computing Optimal Route...";
         let best = Tsp.Flight_duration.get_shortest_path ~origin:airport_origin_address ~dest_list:cities ~path_map:distance_data in
         return (fst best)
         
       | "price" ->
-        let%bind (distance_data) = Tsp.Flight_prices.make_destination_graph map (sorted_city_list) departure_date in
-        let%bind () = Writer.save_sexp filename [%sexp (distance_data : Kayak_data.t Airport.Table.t Airport.Table.t)] in
         print_endline "Computing Optimal Route...";
         let best = Tsp.Flight_prices.get_shortest_path ~origin:airport_origin_address ~dest_list:cities ~path_map:distance_data in
         return (fst best)
       | _ -> assert false) in
+
+    filter_map distance_data;
+    let%bind () = Writer.save_sexp filename [%sexp (distance_data : Kayak_data.t Airport.Table.t Airport.Table.t)] in
 
     (* print_s [%sexp (optimal_route: Airport.t list)]; *)
     print_string "\nFlight path: ";
