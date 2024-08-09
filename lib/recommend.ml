@@ -1,4 +1,4 @@
-open! Core
+(* open! Core
 open Async
 open! Cohttp
 open Cohttp_async
@@ -41,4 +41,4 @@ let find_nearby ~recommendation_type ~location =
   let address = "https://places.googleapis.com/v1/places:searchNearby" in
   let%map response = call_api ~address ~key ~recommendation_type ~location in
   response
-;;
+;; *)

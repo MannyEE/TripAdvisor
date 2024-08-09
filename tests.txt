@@ -15,7 +15,7 @@ Cluster test:
 70 Pine Street, 70 Pine St, New York, NY 10005
 Jane Street, 250 Vesey St, New York, NY 10281
 Chipotle Mexican Grill, 111 Fulton St, New York, NY 10038
-Staten Island Ferry, 4 Whitehall St, New York, NY 10004
+World trade center
 MUSEUM OF ICE CREAM, 558 Broadway, New York, NY 10012
 Nike Soho, 529 Broadway, New York, NY 10012
 NYU Stern School of Business, 44 West 4th Street, New York, NY 10012

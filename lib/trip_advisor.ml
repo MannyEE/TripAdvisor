@@ -2,15 +2,47 @@ open! Core
 open Async
 
 
+let rec get_origin () = 
+  let%bind input = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter origin location" in
 
+  let%bind location_exists = 
+    
+     Monitor.try_with (fun () -> (Google_api.get_location input) )in
+
+     
+
+  match location_exists with 
+  | Ok _ -> return input
+  | Error _ -> 
+    print_endline "Location not found: Please be more specific, or input an address";
+    let%bind next_input = get_origin () in
+    return next_input
+
+;;
 let rec get_desired_places ((): unit) = 
   let%bind input = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter destination (or ENTER to stop)" in
+    
+  let%bind location_exists = 
+    
+     Monitor.try_with (fun () -> (Google_api.get_location input) )in
+
+  let () = match location_exists with 
+  | Ok _ ->  ()
+  | Error _ -> 
+    match input with 
+    | "" -> ()
+    | _ -> print_endline "Location not found: Please be more specific, or input an address" in
+
   match String.equal input "" with 
     | true -> 
       return [];
     | false -> 
       let%map places_list = get_desired_places () in
-      input :: places_list
+
+      match location_exists with 
+      | Ok _ ->  input :: places_list
+      | Error _ -> 
+        places_list
 ;;
 
 
@@ -76,10 +108,11 @@ let find_destination_airports origin_str =
 ;;
 
 let intracity_optimization map = 
-  let%bind string_origin_address = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Enter origin location" in
+  let%bind string_origin_address = get_origin () in
+  (* print_endline "?????????????"; *)
   let%bind location_origin_address = Google_api.get_location string_origin_address in
   (* print_s [%message (location_origin_address.coordinates : Location.Coordinates.t)]; *)
-
+  (* print_endline "!!!!!!!!!!!"; *)
   print_endline "What places would you like to visit? Put in one address at a time";
   let%bind string_places_list = get_desired_places () in
   let%bind location_places_list = Deferred.List.map string_places_list ~how:`Sequential ~f:(fun place ->
@@ -190,7 +223,7 @@ let run () =
 
  (* UNCOMMENT FOR ACTUAL RESULTS *)
 
-    let filename = "kayak_data_saver" in
+    let filename = "kayak_data_saver_presentation" in
     let%bind map_option = Reader.load_sexp filename [%of_sexp : Kayak_data.t Airport.Table.t Airport.Table.t] in
     let map = 
     match map_option with 
@@ -229,10 +262,16 @@ let run () =
       match optimize_cities with
       | "Yes"-> 
         Deferred.List.iter optimal_route ~how:`Sequential ~f:(fun city ->
-          let () = print_endline ("Optimize your trip in: " ^ (city.name)) in
-          let map = Location.Table.create () in
-          let%bind () = intracity_optimization map in
-          return ()
+          let%bind answer = fzf_choose_between ~options_list:flying_options_list ~message:("Would you like to optimize your trip in: " ^ (city.name)) in
+
+          match answer with 
+          | "Yes" ->
+            let map = Location.Table.create () in
+
+            let%bind () = intracity_optimization map in
+            return ()
+          | "No" -> return ()
+          | _ -> assert false
         ) 
   
       | "No"-> 

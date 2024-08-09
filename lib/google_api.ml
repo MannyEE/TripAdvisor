@@ -45,7 +45,7 @@ let get_place_id geocode_json : string =
     place_id  
   with 
   | exn -> 
-    print_endline (Jsonaf.to_string_hum geocode_json);
+    (* print_endline (Jsonaf.to_string_hum geocode_json); *)
     raise exn
 
 
@@ -58,7 +58,7 @@ let get_formatted_address geocode_json : string =
     place_id  
   with 
   | exn -> 
-    print_endline (Jsonaf.to_string_hum geocode_json);
+    (* print_endline (Jsonaf.to_string_hum geocode_json); *)
     raise exn
 ;;
 
@@ -68,7 +68,7 @@ let get_distance geocode_json : string =
     Jsonaf.to_string distance;
   with 
   | exn -> 
-    print_endline (Jsonaf.to_string_hum geocode_json);
+    (* print_endline (Jsonaf.to_string_hum geocode_json); *)
     raise exn
     
 ;;
