@@ -89,7 +89,9 @@ let rec small_input_search ~cur_path ~cur_time ~(dest_set : Node.Set.t) ~(path_m
 
 let rec stsp_optimized_tsp ~cur_path ~cur_time ~(dest_set : Node.Set.t) ~(path_map : Weight.t Node.Table.t Node.Table.t) = 
   match Set.is_empty dest_set with 
-  | true ->  (cur_path, cur_time)
+  | true -> 
+    
+    (cur_path, cur_time)
   | false ->
     let origin = List.last_exn cur_path in
     let edge_map = Hashtbl.find_exn path_map origin in
