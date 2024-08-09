@@ -62,6 +62,7 @@ let rec small_input_search ~cur_path ~cur_time ~(dest_set : Node.Set.t) ~(path_m
     let edge_map = Hashtbl.find_exn path_map last_loc in
     let final_time = Hashtbl.find_exn edge_map first_loc in
     (final_path, final_time) 
+
   ) else 
     Set.fold ~init:(cur_path, None) dest_set ~f:(fun (best_path, shortest_time) dest -> 
       let origin = List.last_exn cur_path in
@@ -134,10 +135,12 @@ let make_destination_graph data_map (places_list : Node.t list) additional_arg =
         let cur_data = Hashtbl.find destination_table destination_city_code in
         match cur_data with 
         | None ->   
+          print_endline "Getting new";
           let%bind data = Arg.compute_weight origin_city_code destination_city_code additional_arg in
           Hashtbl.add_exn ~key:destination_city_code ~data destination_table;
           return ()
         | Some _ ->
+          print_endline "getting_old";
           return()
     ) 
   ) in
@@ -183,4 +186,3 @@ module Flight_prices = Make_tsp (struct
   end)
 
 
-  

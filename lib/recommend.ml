@@ -1,4 +1,4 @@
-open! Core
+(* open! Core
 open Async
 open! Cohttp
 open Cohttp_async
@@ -34,4 +34,4 @@ let call_api address =
 let find_nearby = 
   let origin_address = config_recommendation_address ~street_address:(address) in
   let%map place_id_origin_geocode = call_api ~configured_address:(Uri.of_string origin_address) in
-;;
+;; *)
