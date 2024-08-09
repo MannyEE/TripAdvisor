@@ -56,7 +56,8 @@ let parse_kayak js_file =
 
   let value_str = Jsonaf.member_exn "serverData" script_json 
   |> Jsonaf.member_exn "FlightResultsList" 
-  |> Jsonaf.member_exn "sortData"  in
+  |> Jsonaf.member_exn "results"
+  |> Jsonaf.member_exn "sortData" in
 
   let best_duration = value_str |> Jsonaf.member_exn "duration_a" |> Jsonaf.member_exn "duration" |> Jsonaf.to_string in
   let best_price = value_str |> Jsonaf.member_exn "price_a" |> Jsonaf.member_exn "price" |> Jsonaf.to_string in
@@ -86,10 +87,14 @@ let plane_api ~origin_city_code ~destination_city_code ~date =
   (* let%bind kayak_json =  Reader.file_contents "kayak" in *)
   try
     let price = parse_kayak kayak_json in
+    let final_msg = origin_city_code ^ " " ^ destination_city_code in
+    let () = print_endline (final_msg ^ " " ^(Time_ns.Span.to_string price.duration) ^ " " ^ Int.to_string price.price) in
     return price
 
   with _ ->
-    print_s[%message (origin_city_code ^ " " ^ destination_city_code: string)];
+    let final_msg = origin_city_code ^ " " ^ destination_city_code in
+    print_endline final_msg;
+    (* print_s [%message (err : exn)]; *)
     return Kayak_data.large
   (* return 2 *)
 

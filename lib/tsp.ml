@@ -135,10 +135,12 @@ let make_destination_graph data_map (places_list : Node.t list) additional_arg =
         let cur_data = Hashtbl.find destination_table destination_city_code in
         match cur_data with 
         | None ->   
+          print_endline "Getting new";
           let%bind data = Arg.compute_weight origin_city_code destination_city_code additional_arg in
           Hashtbl.add_exn ~key:destination_city_code ~data destination_table;
           return ()
         | Some _ ->
+          print_endline "getting_old";
           return()
     ) 
   ) in

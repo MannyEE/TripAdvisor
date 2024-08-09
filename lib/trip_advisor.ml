@@ -121,7 +121,7 @@ let intracity_optimization map =
         print_optimal_google_route ~day:(idx + 1) ~best_route:(fst route) ~travel_method) in
 
     return ()
-
+    
     
 
 
@@ -142,6 +142,23 @@ let run () =
   print_int price; *)
 
   (* let%bind flying = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "Do you plan on flying to your destinations" in *)
+  (* let filename = "kayak_data_saver" in
+  let%bind map_option = Reader.load_sexp filename [%of_sexp : Kayak_data.t Airport.Table.t Airport.Table.t] in
+  let map =
+  match map_option with 
+    | Ok map -> map 
+    | Error _-> Airport.Table.create () in
+
+  
+  let hashtbl = Hashtbl.map map ~f:(fun inner_tbl ->
+    Hashtbl.map inner_tbl ~f:(fun data ->
+      Kayak_data.{price = data.price; duration = data.duration; flight_date = Date.of_string "20241212"; request_date = Date.of_string "20241212"} )) in
+
+  let%bind () = Writer.save_sexp filename [%sexp (hashtbl : Kayak_data.t2 Airport.Table.t Airport.Table.t)] in
+
+  return () *)
+  
+
 
   let flying_options_list = [ "No" ; "Yes"] in
   let%bind flying = fzf_choose_between ~options_list:flying_options_list ~message:"Do you plan on flying to your destinations" in
