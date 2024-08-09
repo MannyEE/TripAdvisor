@@ -93,8 +93,8 @@ let plane_api ~origin_city_code ~destination_city_code ~date =
   (* let%bind kayak_json =  Reader.file_contents "kayak" in *)
   try
     let price = parse_kayak kayak_json in
-    let final_msg = origin_city_code ^ " " ^ destination_city_code in
-    let () = print_endline (final_msg ^ " " ^(Time_ns.Span.to_string price.duration) ^ " " ^ Int.to_string price.price) in
+    (* let final_msg = origin_city_code ^ " " ^ destination_city_code in
+    let () = print_endline (final_msg ^ " " ^(Time_ns.Span.to_string price.duration) ^ " " ^ Int.to_string price.price) in *)
     return price
 
   with _ ->
