@@ -8,7 +8,7 @@ let create_recommendation_header key =
 ;;
 
 let api = Lazy_deferred.create (fun () -> Reader.file_contents "/home/ubuntu/api" );;
-let call_api ~configured_address =
+let call_api ~git add -Aconfigured_address =
   let%bind key = Lazy_deferred.force_exn api in
 
   let uri_with_key = Uri.add_query_param' configured_address ("key" , key) in
