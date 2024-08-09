@@ -54,10 +54,16 @@ let parse_kayak js_file =
     (* print_s [%sexp (script_json : Jsonaf.t)]; *)
 
 
-  let value_str = Jsonaf.member_exn "serverData" script_json 
-  |> Jsonaf.member_exn "FlightResultsList" 
-  |> Jsonaf.member_exn "results"
-  |> Jsonaf.member_exn "sortData" in
+  let flight_results_list = Jsonaf.member_exn "serverData" script_json 
+  |> Jsonaf.member_exn "FlightResultsList" in
+
+  let value_str = 
+  match Jsonaf.member "sortData" flight_results_list with  
+  | Some data -> data
+  | None -> 
+    Jsonaf.member_exn "results" flight_results_list 
+    |> Jsonaf.member_exn "sortData"  in
+  (* |> Jsonaf.member_exn "results" *)
 
   let best_duration = value_str |> Jsonaf.member_exn "duration_a" |> Jsonaf.member_exn "duration" |> Jsonaf.to_string in
   let best_price = value_str |> Jsonaf.member_exn "price_a" |> Jsonaf.member_exn "price" |> Jsonaf.to_string in
