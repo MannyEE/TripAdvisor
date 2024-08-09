@@ -86,6 +86,12 @@ let intracity_optimization map =
     Google_api.get_location place
   ) in
 
+(* RECOMMENDATION STUFF *)
+(* let%bind recommend_str = Recommend.find_nearby ~recommendation_type:"restaurant" ~location:location_origin_address in
+print_endline recommend_str; *)
+
+(* *)
+
   let%bind num_days = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "How many days are you traveling?" in
   let num_days = Int.of_string num_days in
 
@@ -99,6 +105,7 @@ let intracity_optimization map =
     | None -> return (`Repeat ())
     ))
   in
+
   let all_places = [location_origin_address] @ location_places_list in
     
     print_endline "Searching Google Maps for travel times...";
@@ -121,7 +128,7 @@ let intracity_optimization map =
         print_optimal_google_route ~day:(idx + 1) ~best_route:(fst route) ~travel_method) in
 
     return ()
-    
+
     
 
 
@@ -171,7 +178,6 @@ let run () =
     (* let%bind departure_date = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "What day would you like to leave (Enter in YYYYMMDD)" >>| Date.of_string in *)
     let%bind date_list = Async_interactive.ask_dispatch_gen ~f:(fun input -> Ok input) "What day would you like to leave (Enter in MM/DD/YYYY)" >>| 
     String.split ~on:'/' in
-    
     let departure_date = 
     Date.of_string ((List.nth_exn date_list 2) ^ (List.nth_exn date_list 0) ^ (List.nth_exn date_list 1)) in
 
