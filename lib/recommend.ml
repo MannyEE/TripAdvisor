@@ -3,18 +3,12 @@ open Async
 open! Cohttp
 open Cohttp_async
 
-
-let config_recommendation_address ~location = 
-  
-;;
-
-
 let create_recommendation_header key = 
   Cohttp.Header.of_list [("X-Goog-Api-Key", key) ; ("Content-Type", "application/json") ; ("X-Goog-FieldMask" "places.displayName")]
 ;;
 
 let api = Lazy_deferred.create (fun () -> Reader.file_contents "/home/ubuntu/api" );;
-let call_api ~configured_address =
+let call_api ~git add -Aconfigured_address =
   let%bind key = Lazy_deferred.force_exn api in
 
   let uri_with_key = Uri.add_query_param' configured_address ("key" , key) in
@@ -23,8 +17,8 @@ let call_api ~configured_address =
   return (Jsonaf.of_string body)
 ;;
 
-let call_api address =
-  Client.post ~headers:(create_kayak_header ()) (Uri.of_string (address)) >>= fun (_resp, body) ->
+let call_api ~address ~key =
+  Client.post ~headers:(create_recommendation_header key) (Uri.of_string (address)) >>= fun (_resp, body) ->
   let%bind body = Body.to_string body in
   (* print_endline body; *)
   return body
