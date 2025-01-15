@@ -1,5 +1,5 @@
 Trip Advisor
-This program is a trip advisor that helps optimize flight and ground travel routes
+This program is a trip advisor that helps optimize flight and ground travel routes. Just enter 
 
 Restrictions:
 - You need a google maps API key, with geocoding, directions, places and places (new) enabled, stored in the filepath '/home/ubuntu/api' in order for the program to find the key
@@ -7,3 +7,7 @@ Restrictions:
 
 How to run:
 'dune exec bin/main.exe'
+
+It will then prompt the user whether or not they plan on flying to their destinations.
+
+You will then be prompted to enter your specified origin location, and then enter locations you would like to visit.
